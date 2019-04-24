@@ -286,7 +286,7 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 	else
 		for (int i = 0; i < strTemp.GetLength(); i++)
 		{
-			if (i < iPos) {
+			if (strTemp.Find(_T(":"))>0 && i < iPos) {
 				strTemp.SetAt(i, strHour.GetAt(i));
 			}
 
@@ -365,47 +365,50 @@ void CBellRingDlg::SetTime()
 
 	m_oaThreadParam->timeList.clear();
 	TimeOperate temp(-1);
+
 	//AM
+	bool bIsAM = true;
 	temp = m_oaThreadParam->strFirstTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 
 	temp += m_oaThreadParam->iSmallTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 
 	temp += m_oaThreadParam->iBigTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 
 	temp += m_oaThreadParam->iSmallTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 
 	//PM
+	bIsAM = false;
 	temp = m_oaThreadParam->strSecondTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 
 	temp += m_oaThreadParam->iSmallTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 
 	temp += m_oaThreadParam->iBigTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 
 	temp += m_oaThreadParam->iSmallTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
 }
 
 void CBellRingDlg::ReSetRingWait() 

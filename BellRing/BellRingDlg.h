@@ -33,6 +33,14 @@ struct SThreadParam
 
 	CWnd* pWndTimeText;
 	CListBox* pTimeListBox;
+
+	bool PushtimeList(TimeOperate time, bool bIsAM) {
+		if (bIsAM && time < TimeOperate(L"12:00")) 
+			{ timeList.push_back(TimeOperate(time)); return true; }
+		if (!bIsAM && time >= TimeOperate(L"12:00") && time <= TimeOperate(L"23:59")) 
+			{ timeList.push_back(TimeOperate(time)); return true; }
+		return false;
+	}
 };
 
 // CBellRingDlg dialog
@@ -63,7 +71,7 @@ private:
 
 private:
 	int m_iEditLen[2] = { 0 };
-	CString m_strPreString[2] = {_T("")};
+	CString m_strPreString[2] = { _T("") };
 
 // Implementation
 protected:

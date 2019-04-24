@@ -10,7 +10,10 @@ TimeOperate::TimeOperate(int iMin)
 
 TimeOperate::TimeOperate(CString strTime)
 {
-	this->m_strTime = strTime;
+	if (TimeToInt(strTime) == -1)
+		this->m_strTime = L"Error!";
+	else
+		this->m_strTime = strTime;
 }
 
 TimeOperate::TimeOperate(TimeOperate& p)
@@ -40,7 +43,7 @@ int TimeOperate::TimeToInt(CString strTime)
 	strTime = strTime.Right(iLength);
 	int iMinute = _wtoi(strTime);
 
-	if (iHour <= 24 && iMinute <= 60)
+	if (iHour < 24 && iMinute < 60)
 	{
 		return iHour * 60 + iMinute;
 	}

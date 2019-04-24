@@ -50,10 +50,10 @@ int TimeOperate::TimeToInt(CString strTime)
 	}
 }
 
-CString TimeOperate::TimeToCString(int time)
+CString TimeOperate::TimeToCString(int iTime)
 {
-	int iHour = time / 60;
-	int iMinute = time - (iHour * 60);
+	int iHour = iTime / 60;
+	int iMinute = iTime - (iHour * 60);
 
 	CString strTime;
 

@@ -5,8 +5,8 @@ private:
 	CString m_strTime;
 
 public:
-	TimeOperate(int x1);
-	TimeOperate(CString s1);
+	TimeOperate(int iMin);
+	TimeOperate(CString strTime);
 	TimeOperate(TimeOperate& p);
 	~TimeOperate();
 
@@ -14,8 +14,8 @@ public:
 	CString GetValue();
 
 private:
-	int TimeToInt(CString time);
-	CString TimeToCString(int time);
+	int TimeToInt(CString strTime);
+	CString TimeToCString(int iTime);
 
 public:
 	const TimeOperate operator+(const TimeOperate& p);

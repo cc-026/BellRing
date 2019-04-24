@@ -54,12 +54,16 @@ public:
 	NOTIFYICONDATA nid;
 
 private:
-	void TextInputFormatTime(CEdit* editHelp);
+	void TextInputFormatTime(CEdit* editHelp, bool bIsAM);
 	void TextInputFormatMinute(CEdit* editHelp);
 	void SetTime();
 	void ReSetRingWait();
 	void CreateIconOnTray();
 	void ShowTimeList();
+
+private:
+	int m_iEditLen[2] = { 0 };
+	CString m_strPreString[2] = {_T("")};
 
 // Implementation
 protected:

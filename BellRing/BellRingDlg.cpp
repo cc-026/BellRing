@@ -6,11 +6,14 @@
 #include "BellRing.h"
 #include "BellRingDlg.h"
 #include "afxdialogex.h"
+#include <algorithm>
 #pragma comment(lib, "winmm.lib")
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+
+#define clamp_val(val, lo, hi) min(max(val, lo), hi)
 
 SThreadParam* m_oaThreadParam;
 
@@ -66,7 +69,7 @@ BEGIN_MESSAGE_MAP(CBellRingDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_MESSAGE(WM_SHOWTASK,OnTray)
+	ON_MESSAGE(WM_SHOWTASK, OnTray)
 	ON_EN_CHANGE(IDC_EDIT1, &CBellRingDlg::OnEnChangeEdit1)
 	ON_EN_CHANGE(IDC_EDIT2, &CBellRingDlg::OnEnChangeEdit2)
 	ON_EN_CHANGE(IDC_EDIT3, &CBellRingDlg::OnEnChangeEdit3)
@@ -242,47 +245,70 @@ BOOL CBellRingDlg::PreTranslateMessage(MSG* pMsg)
 	return CDialogEx::PreTranslateMessage(pMsg);
 }
 
-void CBellRingDlg::TextInputFormatTime(CEdit* editHelp)
+void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM)
 {
 	CString strTemp = _T("");
 	editHelp->GetWindowText(strTemp);
-	int len = strTemp.GetLength();
+	int iPreTextLen = m_strPreString[bIsAM].GetLength();
+	if (strTemp == m_strPreString[bIsAM])
+		return;
+	m_strPreString[bIsAM] = strTemp;
 
-	for (int i = 0; i < len; i++)
+	int iPos = strTemp.Find(_T(":")) < 2 && strTemp.Find(_T(":")) > 0 ? strTemp.Find(_T(":")) : 2;
+	if(strTemp.GetLength() > iPos + 3)
+		strTemp = strTemp.Left(iPos + 3);
+	if (strTemp.GetLength() == iPos && strTemp.GetLength() > iPreTextLen)
+		strTemp.AppendChar(L':');
+	if (strTemp.GetLength() == iPos+1 && strTemp.GetLength() < iPreTextLen)
+		strTemp = strTemp.Left(iPos);
+
+	CString strHour;
+	AfxExtractSubString(strHour, strTemp, 0, _T(':'));
+	int iHour = bIsAM ? clamp_val(_ttoi(strHour), 0, 11) : clamp_val(_ttoi(strHour), 12, 23);
+	int iHl = strHour.GetLength();
+	if (iHl > 1)
+		strHour.Format(_T("%02d"), iHour);
+	else
+		strHour.Format(_T("%d"), iHour);
+
+	CString strMin;
+	AfxExtractSubString(strMin, strTemp, 1, _T(':'));
+	int iMin = clamp_val(_ttoi(strMin), 0, 59);
+	int iMl = strMin.GetLength();
+	if (iMl > 1)
+		strMin.Format(_T("%02d"), iMin);
+	else
+		strMin.Format(_T("%d"), iMin);
+
+	char buf[1024];
+	sprintf_s(buf, "editHelplen:%d,%d\n", iPreTextLen, strTemp.GetLength());
+	OutputDebugStringA(buf);
+
+	for (int i = 0; i < strTemp.GetLength(); i++)
 	{
-		if (i == 2)
-		{
-			if (strTemp.GetAt(i) != ':')
-			{
-				strTemp = strTemp.Left(i);
-				editHelp->SetWindowText(strTemp);
-				editHelp->SetSel(i, i, TRUE);
-
-				return;
-
-			}
+		if (i < iPos) {
+			strTemp.SetAt(i, strHour.GetAt(i));
 		}
-		else
-		{
-			if (i < 5)
-			{
-				if (strTemp.GetAt(i) < '0' || strTemp.GetAt(i) > '9')
-				{
-					strTemp = strTemp.Left(i);
-					editHelp->SetWindowText(strTemp);
-					editHelp->SetSel(i, i, TRUE);
 
-					return;
-				}
-			}
-			else
+		if (i > iPos) {
+			strTemp.SetAt(i, strMin.GetAt(i - iPos - 1));
+		}
+
+		if (i == iPos)
+		{
+			strTemp.SetAt(i, L':');
+		}
+		else if (i < iPos + 3)
+		{
+			if (strTemp.GetAt(i) < '0' || strTemp.GetAt(i) > '9')
 			{
 				strTemp = strTemp.Left(i);
-				editHelp->SetWindowText(strTemp);
-				editHelp->SetSel(i, i, TRUE);
 			}
 		}
 	}
+
+	editHelp->SetWindowText(strTemp);
+	editHelp->SetSel(strTemp.GetLength(), strTemp.GetLength(), TRUE);
 }
 
 void CBellRingDlg::TextInputFormatMinute(CEdit* editHelp)
@@ -414,7 +440,7 @@ void CBellRingDlg::OnEnChangeEdit1()
 
 	// TODO:  Add your control notification handler code here
 	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT1)));
-	TextInputFormatTime(editHelp);
+	TextInputFormatTime(editHelp, true);
 }
 
 void CBellRingDlg::OnEnChangeEdit2()
@@ -426,7 +452,7 @@ void CBellRingDlg::OnEnChangeEdit2()
 
 	// TODO:  Add your control notification handler code here
 	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT2)));
-	TextInputFormatTime(editHelp);
+	TextInputFormatTime(editHelp, false);
 }
 
 void CBellRingDlg::OnEnChangeEdit3()

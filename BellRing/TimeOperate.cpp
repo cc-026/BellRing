@@ -1,20 +1,21 @@
 #include "stdafx.h"
 #include "TimeOperate.h"
+#include "time.h"
 
 
-TimeOperate::TimeOperate(int x1)
+TimeOperate::TimeOperate(int iMin)
 {
-	x = TimeToCString(x1);
+	this->m_strTime = TimeToCString(iMin);
 }
 
-TimeOperate::TimeOperate(CString s1)
+TimeOperate::TimeOperate(CString strTime)
 {
-	x = s1;
+	this->m_strTime = strTime;
 }
 
 TimeOperate::TimeOperate(TimeOperate& p)
 {
-	x = p.x;
+	this->m_strTime = p.m_strTime;
 }
 
 TimeOperate::~TimeOperate()
@@ -23,25 +24,25 @@ TimeOperate::~TimeOperate()
 
 CString TimeOperate::GetValue()
 {
-	return x;
+	return this->m_strTime;
 }
 
-int TimeOperate::TimeToInt(CString time)
+int TimeOperate::TimeToInt(CString strTime)
 {
-	int i = time.Find(L":");
+	int i = strTime.Find(L":");
 	if (i==-1)
 	{
 		return i;
 	}
 
-	int hour = _wtoi(time.Left(i));
-	int length = time.Delete(0, i+1);
-	time = time.Right(length);
-	int minute = _wtoi(time);
+	int iHour = _wtoi(strTime.Left(i));
+	int iLength = strTime.Delete(0, i+1);
+	strTime = strTime.Right(iLength);
+	int iMinute = _wtoi(strTime);
 
-	if (hour <= 24 && minute <= 60)
+	if (iHour <= 24 && iMinute <= 60)
 	{
-		return hour * 60 + minute;
+		return iHour * 60 + iMinute;
 	}
 	else
 	{
@@ -51,46 +52,46 @@ int TimeOperate::TimeToInt(CString time)
 
 CString TimeOperate::TimeToCString(int time)
 {
-	int hour = time / 60;
-	int minute = time - (hour * 60);
+	int iHour = time / 60;
+	int iMinute = time - (iHour * 60);
 
-	CString timeCS;
+	CString strTime;
 
-	if (hour >= 0 && hour < 24 && minute >= 0 && minute < 60)
+	if (iHour >= 0 && iHour < 24 && iMinute >= 0 && iMinute < 60)
 	{
-		timeCS.Format(_T("%d%d:%d%d"), hour / 10, hour % 10, minute / 10, minute % 10);
+		strTime.Format(_T("%02d:%02d"), iHour, iMinute);
 	}
 	else
 	{
-		timeCS = L"Error!";
+		strTime = L"Error!";
 	}
-	return timeCS;
+	return strTime;
 }
 
 const TimeOperate TimeOperate::operator+(const TimeOperate& p)
 {
 
-	if (TimeToInt(x) == -1 || TimeToInt(p.x) == -1)
+	if (TimeToInt(m_strTime) == -1 || TimeToInt(p.m_strTime) == -1)
 	{
 		return TimeOperate(L"Error!");
 	}
 	else
 	{
-		int returnValue = TimeToInt(x) + TimeToInt(p.x);
-		int hour = returnValue / 60;
-		while (!(hour >= 0 && hour < 24) )
+		int iReturnValue = TimeToInt(m_strTime) + TimeToInt(p.m_strTime);
+		int iHour = iReturnValue / 60;
+		while (!(iHour >= 0 && iHour < 24) )
 		{
-			if (hour <0)
+			if (iHour <0)
 			{
-				returnValue += (24 * 60);
+				iReturnValue += (24 * 60);
 			} 
-			if (hour >= 24)
+			if (iHour >= 24)
 			{
-				returnValue -= (24 * 60);
+				iReturnValue -= (24 * 60);
 			}
-			hour = returnValue / 60;
+			iHour = iReturnValue / 60;
 		}
-		return TimeOperate(returnValue);
+		return TimeOperate(iReturnValue);
 	}
 
 }
@@ -98,27 +99,27 @@ const TimeOperate TimeOperate::operator+(const TimeOperate& p)
 const TimeOperate TimeOperate::operator-(const TimeOperate& p)
 {
 
-	if (TimeToInt(x) == -1 || TimeToInt(p.x) == -1)
+	if (TimeToInt(m_strTime) == -1 || TimeToInt(p.m_strTime) == -1)
 	{
 		return TimeOperate(L"Error!");
 	}
 	else
 	{
-		int returnValue = TimeToInt(x) - TimeToInt(p.x);
-		int hour = returnValue / 60;
-		while (!(hour >= 0 && hour < 24))
+		int iReturnValue = TimeToInt(m_strTime) - TimeToInt(p.m_strTime);
+		int iHour = iReturnValue / 60;
+		while (!(iHour >= 0 && iHour < 24))
 		{
-			if (hour < 0)
+			if (iHour < 0)
 			{
-				returnValue += (24 * 60);
+				iReturnValue += (24 * 60);
 			}
-			if (hour >= 24)
+			if (iHour >= 24)
 			{
-				returnValue -= (24 * 60);
+				iReturnValue -= (24 * 60);
 			}
-			hour = returnValue / 60;
+			iHour = iReturnValue / 60;
 		}
-		return TimeOperate(returnValue);
+		return TimeOperate(iReturnValue);
 	}
 
 }
@@ -126,28 +127,28 @@ const TimeOperate TimeOperate::operator-(const TimeOperate& p)
 const TimeOperate TimeOperate::operator+=(const TimeOperate& p)
 {
 
-	if (TimeToInt(x) == -1 || TimeToInt(p.x) == -1)
+	if (TimeToInt(m_strTime) == -1 || TimeToInt(p.m_strTime) == -1)
 	{
-		x = L"Error!";
+		m_strTime = L"Error!";
 	}
 	else
 	{
-		int returnValue = TimeToInt(x) + TimeToInt(p.x);
-		int hour = returnValue / 60;
-		while (!(hour >= 0 && hour < 24))
+		int iReturnValue = TimeToInt(m_strTime) + TimeToInt(p.m_strTime);
+		int iHour = iReturnValue / 60;
+		while (!(iHour >= 0 && iHour < 24))
 		{
-			if (hour < 0)
+			if (iHour < 0)
 			{
-				returnValue += (24 * 60);
+				iReturnValue += (24 * 60);
 			}
-			if(hour>= 24)
+			if(iHour >= 24)
 			{
-				returnValue -= (24 * 60);
+				iReturnValue -= (24 * 60);
 			}
-			hour = returnValue / 60;
+			iHour = iReturnValue / 60;
 		}
 
-		x = TimeToCString(returnValue);
+		m_strTime = TimeToCString(iReturnValue);
 	}
 
 	return *this;
@@ -156,13 +157,13 @@ const TimeOperate TimeOperate::operator+=(const TimeOperate& p)
 const TimeOperate TimeOperate::operator-=(const TimeOperate& p)
 {
 
-	if (TimeToInt(x) == -1 || TimeToInt(p.x) == -1)
+	if (TimeToInt(m_strTime) == -1 || TimeToInt(p.m_strTime) == -1)
 	{
-		x = L"Error!";
+		m_strTime = L"Error!";
 	}
 	else
 	{
-		int returnValue = TimeToInt(x) - TimeToInt(p.x);
+		int returnValue = TimeToInt(m_strTime) - TimeToInt(p.m_strTime);
 		int hour = returnValue / 60;
 		while (!(hour >= 0 && hour < 24))
 		{
@@ -177,7 +178,7 @@ const TimeOperate TimeOperate::operator-=(const TimeOperate& p)
 			hour = returnValue / 60;
 		}
 
-		x = TimeToCString(returnValue);
+		m_strTime = TimeToCString(returnValue);
 	}
 
 	return *this;
@@ -185,25 +186,25 @@ const TimeOperate TimeOperate::operator-=(const TimeOperate& p)
 
 const bool TimeOperate::operator<(const TimeOperate& p)
 {
-	return TimeToInt(x) < TimeToInt(p.x);
+	return TimeToInt(m_strTime) < TimeToInt(p.m_strTime);
 }
 
 const bool TimeOperate::operator>(const TimeOperate& p)
 {
-	return TimeToInt(x) > TimeToInt(p.x);
+	return TimeToInt(m_strTime) > TimeToInt(p.m_strTime);
 }
 
 const bool TimeOperate::operator<=(const TimeOperate& p)
 {
-	return TimeToInt(x) <= TimeToInt(p.x);
+	return TimeToInt(m_strTime) <= TimeToInt(p.m_strTime);
 }
 
 const bool TimeOperate::operator>=(const TimeOperate& p)
 {
-	return TimeToInt(x)  >= TimeToInt(p.x);
+	return TimeToInt(m_strTime)  >= TimeToInt(p.m_strTime);
 }
 
 const bool TimeOperate::operator==(const TimeOperate& p)
 {
-	return TimeToInt(x) == TimeToInt(p.x);
+	return TimeToInt(m_strTime) == TimeToInt(p.m_strTime);
 }

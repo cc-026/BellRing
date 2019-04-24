@@ -20,19 +20,19 @@ struct SThreadParam
 	unsigned int	iThreadID;
 	UINT_PTR		hThreadHandle;
 
-	CString currentTime;
-	CString firstTime;
-	CString secondTime;
+	CString strCurrentTime;
+	CString strFirstTime;
+	CString strSecondTime;
 
-	int classTime;
-	int bigTime;
-	int smallTime;
+	int iClassTime;
+	int iBigTime;
+	int iSmallTime;
 
 	std::vector<TimeOperate>timeList;
 	size_t ringWait;
 
-	CWnd* timeText;
-	CListBox* timeListBox;
+	CWnd* pWndTimeText;
+	CListBox* pTimeListBox;
 };
 
 // CBellRingDlg dialog

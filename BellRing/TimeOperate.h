@@ -2,7 +2,7 @@
 class TimeOperate
 {
 private:
-	CString x;
+	CString m_strTime;
 
 public:
 	TimeOperate(int x1);

@@ -103,13 +103,13 @@ unsigned __stdcall TimeShowThread(void* pParam)
 	{
 		SYSTEMTIME st = { 0 };
 		GetLocalTime(&st);
-		pThreadParam->currentTime.Format(_T("%d%d:%d%d"), st.wHour / 10, st.wHour % 10, st.wMinute / 10, st.wMinute % 10);
+		pThreadParam->strCurrentTime.Format(_T("%02d:%02d"), st.wHour , st.wMinute);
 		CString timeShow;
-		timeShow.Format(_T("%s:%d%d"), pThreadParam->currentTime, st.wSecond / 10, st.wSecond % 10);
-		pThreadParam->timeText->SetWindowText((LPCTSTR)timeShow);
-		if (pThreadParam->ringWait < pThreadParam->timeList.size() && pThreadParam->timeList[pThreadParam->ringWait] == pThreadParam->currentTime)
+		timeShow.Format(_T("%s:%02d"), pThreadParam->strCurrentTime, st.wSecond);
+		pThreadParam->pWndTimeText->SetWindowText((LPCTSTR)timeShow);
+		if (pThreadParam->ringWait < pThreadParam->timeList.size() && pThreadParam->timeList[pThreadParam->ringWait] == pThreadParam->strCurrentTime)
 		{
-			pThreadParam->timeListBox->DeleteString(0);
+			pThreadParam->pTimeListBox->DeleteString(0);
 
 			unsigned int	iThreadID;
 			UINT_PTR		hThreadHandle;
@@ -161,8 +161,8 @@ BOOL CBellRingDlg::OnInitDialog()
 	::SetWindowLong(m_hWnd, GWL_STYLE, style);	//设置窗口类型
 
 	m_oaThreadParam = new SThreadParam();
-	m_oaThreadParam->timeText = this->GetDlgItem(IDC_TIMETEXT_STATIC);
-	m_oaThreadParam->timeListBox = ((CListBox*)(GetDlgItem(IDC_LIST1)));
+	m_oaThreadParam->pWndTimeText = this->GetDlgItem(IDC_TIMETEXT_STATIC);
+	m_oaThreadParam->pTimeListBox = ((CListBox*)(GetDlgItem(IDC_LIST1)));
 	m_oaThreadParam->hThreadHandle = _beginthreadex(0, 0, TimeShowThread, m_oaThreadParam, CREATE_SUSPENDED, &(m_oaThreadParam->iThreadID));
 	ResumeThread((HANDLE)m_oaThreadParam->hThreadHandle);
 	
@@ -345,73 +345,73 @@ void CBellRingDlg::SetTime()
 	CString strTemp = _T("");
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT1)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->firstTime = strTemp;
+	m_oaThreadParam->strFirstTime = strTemp;
 
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT2)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->secondTime = strTemp;
+	m_oaThreadParam->strSecondTime = strTemp;
 
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT3)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->classTime = _wtoi(strTemp);
+	m_oaThreadParam->iClassTime = _wtoi(strTemp);
 
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT4)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->bigTime = _wtoi(strTemp);
+	m_oaThreadParam->iBigTime = _wtoi(strTemp);
 
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT5)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->smallTime = _wtoi(strTemp);
+	m_oaThreadParam->iSmallTime = _wtoi(strTemp);
 
 	m_oaThreadParam->timeList.clear();
 	TimeOperate temp(-1);
 	//AM
-	temp = m_oaThreadParam->firstTime;
+	temp = m_oaThreadParam->strFirstTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
-	temp += m_oaThreadParam->classTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
-
-	temp += m_oaThreadParam->smallTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
-	temp += m_oaThreadParam->classTime;
+	temp += m_oaThreadParam->iClassTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
 
-	temp += m_oaThreadParam->bigTime;
+	temp += m_oaThreadParam->iSmallTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
-	temp += m_oaThreadParam->classTime;
+	temp += m_oaThreadParam->iClassTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
 
-	temp += m_oaThreadParam->smallTime;
+	temp += m_oaThreadParam->iBigTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
-	temp += m_oaThreadParam->classTime;
+	temp += m_oaThreadParam->iClassTime;
+	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+
+	temp += m_oaThreadParam->iSmallTime;
+	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	temp += m_oaThreadParam->iClassTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
 
 	//PM
-	temp = m_oaThreadParam->secondTime;
+	temp = m_oaThreadParam->strSecondTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
-	temp += m_oaThreadParam->classTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
-
-	temp += m_oaThreadParam->smallTime;
-	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
-	temp += m_oaThreadParam->classTime;
+	temp += m_oaThreadParam->iClassTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
 
-	temp += m_oaThreadParam->bigTime;
+	temp += m_oaThreadParam->iSmallTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
-	temp += m_oaThreadParam->classTime;
+	temp += m_oaThreadParam->iClassTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
 
-	temp += m_oaThreadParam->smallTime;
+	temp += m_oaThreadParam->iBigTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
-	temp += m_oaThreadParam->classTime;
+	temp += m_oaThreadParam->iClassTime;
+	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+
+	temp += m_oaThreadParam->iSmallTime;
+	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
+	temp += m_oaThreadParam->iClassTime;
 	m_oaThreadParam->timeList.push_back(TimeOperate(temp));
 }
 
 void CBellRingDlg::ReSetRingWait() 
 {
 	m_oaThreadParam->ringWait = 0;
-	while (m_oaThreadParam->ringWait < m_oaThreadParam->timeList.size() && m_oaThreadParam->timeList[m_oaThreadParam->ringWait] < m_oaThreadParam->currentTime)
+	while (m_oaThreadParam->ringWait < m_oaThreadParam->timeList.size() && m_oaThreadParam->timeList[m_oaThreadParam->ringWait] < m_oaThreadParam->strCurrentTime)
 	{
 		m_oaThreadParam->ringWait++;
 	}

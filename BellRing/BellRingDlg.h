@@ -4,7 +4,7 @@
 #define WM_SHOWTASK (WM_USER +1)
 
 #include "stdafx.h"
-#include<iostream>
+#include <iostream>
 #include <time.h>
 #include <stdio.h>
 #include <vector>

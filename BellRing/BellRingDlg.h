@@ -54,7 +54,7 @@ public:
 	NOTIFYICONDATA nid;
 
 private:
-	void TextInputFormatTime(CEdit* editHelp, bool bIsAM);
+	void TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKillFocus);
 	void TextInputFormatMinute(CEdit* editHelp);
 	void SetTime();
 	void ReSetRingWait();
@@ -88,6 +88,8 @@ public:
 	afx_msg void OnEnChangeEdit3();
 	afx_msg void OnEnChangeEdit4();
 	afx_msg void OnEnChangeEdit5();
+	afx_msg void OnKillFocusEdit1();
+	afx_msg void OnKillFocusEdit2();
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedButton2();
 };

@@ -75,6 +75,8 @@ BEGIN_MESSAGE_MAP(CBellRingDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT3, &CBellRingDlg::OnEnChangeEdit3)
 	ON_EN_CHANGE(IDC_EDIT4, &CBellRingDlg::OnEnChangeEdit4)
 	ON_EN_CHANGE(IDC_EDIT5, &CBellRingDlg::OnEnChangeEdit5)
+	ON_EN_KILLFOCUS(IDC_EDIT1, &CBellRingDlg::OnKillFocusEdit1)
+	ON_EN_KILLFOCUS(IDC_EDIT2, &CBellRingDlg::OnKillFocusEdit2)
 	ON_BN_CLICKED(IDC_BUTTON1, &CBellRingDlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON2, &CBellRingDlg::OnBnClickedButton2)
 END_MESSAGE_MAP()
@@ -245,28 +247,28 @@ BOOL CBellRingDlg::PreTranslateMessage(MSG* pMsg)
 	return CDialogEx::PreTranslateMessage(pMsg);
 }
 
-void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM)
+void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKillFocus)
 {
 	CString strTemp = _T("");
 	editHelp->GetWindowText(strTemp);
 	int iPreTextLen = m_strPreString[bIsAM].GetLength();
-	if (strTemp == m_strPreString[bIsAM])
+	if (strTemp == m_strPreString[bIsAM] && !bIsKillFocus)
 		return;
 	m_strPreString[bIsAM] = strTemp;
 
 	int iPos = strTemp.Find(_T(":")) < 2 && strTemp.Find(_T(":")) > 0 ? strTemp.Find(_T(":")) : 2;
-	if(strTemp.GetLength() > iPos + 3)
+	if (strTemp.GetLength() > iPos + 3)
 		strTemp = strTemp.Left(iPos + 3);
 	if (strTemp.GetLength() == iPos && strTemp.GetLength() > iPreTextLen)
 		strTemp.AppendChar(L':');
-	if (strTemp.GetLength() == iPos+1 && strTemp.GetLength() < iPreTextLen)
+	if (strTemp.GetLength() == iPos + 1 && strTemp.GetLength() < iPreTextLen)
 		strTemp = strTemp.Left(iPos);
 
 	CString strHour;
 	AfxExtractSubString(strHour, strTemp, 0, _T(':'));
 	int iHour = bIsAM ? clamp_val(_ttoi(strHour), 0, 11) : clamp_val(_ttoi(strHour), 12, 23);
 	int iHl = strHour.GetLength();
-	if (iHl > 1)
+	if (iHl > 1 || bIsKillFocus)
 		strHour.Format(_T("%02d"), iHour);
 	else
 		strHour.Format(_T("%d"), iHour);
@@ -275,37 +277,35 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM)
 	AfxExtractSubString(strMin, strTemp, 1, _T(':'));
 	int iMin = clamp_val(_ttoi(strMin), 0, 59);
 	int iMl = strMin.GetLength();
-	if (iMl > 1)
+	if (iMl > 1 || bIsKillFocus)
 		strMin.Format(_T("%02d"), iMin);
 	else
 		strMin.Format(_T("%d"), iMin);
-
-	char buf[1024];
-	sprintf_s(buf, "editHelplen:%d,%d\n", iPreTextLen, strTemp.GetLength());
-	OutputDebugStringA(buf);
-
-	for (int i = 0; i < strTemp.GetLength(); i++)
-	{
-		if (i < iPos) {
-			strTemp.SetAt(i, strHour.GetAt(i));
-		}
-
-		if (i > iPos) {
-			strTemp.SetAt(i, strMin.GetAt(i - iPos - 1));
-		}
-
-		if (i == iPos)
+	if (bIsKillFocus)
+		strTemp = strHour + L":" + strMin;
+	else
+		for (int i = 0; i < strTemp.GetLength(); i++)
 		{
-			strTemp.SetAt(i, L':');
-		}
-		else if (i < iPos + 3)
-		{
-			if (strTemp.GetAt(i) < '0' || strTemp.GetAt(i) > '9')
+			if (i < iPos) {
+				strTemp.SetAt(i, strHour.GetAt(i));
+			}
+
+			if (i > iPos) {
+				strTemp.SetAt(i, strMin.GetAt(i - iPos - 1));
+			}
+
+			if (i == iPos)
 			{
-				strTemp = strTemp.Left(i);
+				strTemp.SetAt(i, L':');
+			}
+			else if (i < iPos + 3)
+			{
+				if (strTemp.GetAt(i) < '0' || strTemp.GetAt(i) > '9')
+				{
+					strTemp = strTemp.Left(i);
+				}
 			}
 		}
-	}
 
 	editHelp->SetWindowText(strTemp);
 	editHelp->SetSel(strTemp.GetLength(), strTemp.GetLength(), TRUE);
@@ -440,7 +440,7 @@ void CBellRingDlg::OnEnChangeEdit1()
 
 	// TODO:  Add your control notification handler code here
 	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT1)));
-	TextInputFormatTime(editHelp, true);
+	TextInputFormatTime(editHelp, true, false);
 }
 
 void CBellRingDlg::OnEnChangeEdit2()
@@ -452,7 +452,7 @@ void CBellRingDlg::OnEnChangeEdit2()
 
 	// TODO:  Add your control notification handler code here
 	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT2)));
-	TextInputFormatTime(editHelp, false);
+	TextInputFormatTime(editHelp, false, false);
 }
 
 void CBellRingDlg::OnEnChangeEdit3()
@@ -489,6 +489,18 @@ void CBellRingDlg::OnEnChangeEdit5()
 	// TODO:  Add your control notification handler code here
 	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT5)));
 	TextInputFormatMinute(editHelp);
+}
+
+void CBellRingDlg::OnKillFocusEdit1()
+{
+	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT1)));
+	TextInputFormatTime(editHelp, true, true);
+}
+
+void CBellRingDlg::OnKillFocusEdit2()
+{
+	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT2)));
+	TextInputFormatTime(editHelp, false, true);
 }
 
 void CBellRingDlg::OnBnClickedButton1()

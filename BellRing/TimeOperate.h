@@ -7,11 +7,12 @@ private:
 public:
 	TimeOperate(int iMin);
 	TimeOperate(CString strTime);
-	TimeOperate(TimeOperate& p);
+	TimeOperate(const TimeOperate& p);
 	~TimeOperate();
 
 public:
 	CString GetValue();
+	bool bIsAM();
 
 private:
 	int TimeToInt(CString strTime);

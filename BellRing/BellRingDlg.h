@@ -21,8 +21,7 @@ struct SThreadParam
 	UINT_PTR		hThreadHandle;
 
 	CString strCurrentTime;
-	CString strFirstTime;
-	CString strSecondTime;
+	CString strStartTime[2];
 
 	int iClassTime;
 	int iBigTime;
@@ -34,11 +33,10 @@ struct SThreadParam
 	CWnd* pWndTimeText;
 	CListBox* pTimeListBox;
 
-	bool PushtimeList(TimeOperate time, bool bIsAM) {
-		if (bIsAM && time < TimeOperate(L"12:00")) 
-			{ timeList.push_back(TimeOperate(time)); return true; }
-		if (!bIsAM && time >= TimeOperate(L"12:00") && time <= TimeOperate(L"23:59")) 
-			{ timeList.push_back(TimeOperate(time)); return true; }
+	bool PushtimeList(TimeOperate &time, bool bIsAM) {
+		TimeOperate after = (time + iClassTime);
+		if (bIsAM == time.bIsAM() && bIsAM == after.bIsAM())
+			{ timeList.push_back(time); timeList.push_back(time+=iClassTime); return true; }
 		return false;
 	}
 };

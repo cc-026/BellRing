@@ -109,6 +109,10 @@ unsigned __stdcall TimeShowThread(void* pParam)
 		pThreadParam->pWndTimeText->SetWindowText((LPCTSTR)timeShow);
 		if (pThreadParam->ringWait < pThreadParam->timeList.size() && pThreadParam->timeList[pThreadParam->ringWait] == pThreadParam->strCurrentTime)
 		{
+			int iPos;
+			iPos = pThreadParam->pTimeListBox->FindString(0, L"об©н");
+			if (iPos == 3) 
+				pThreadParam->pTimeListBox->DeleteString(0);
 			pThreadParam->pTimeListBox->DeleteString(0);
 
 			unsigned int	iThreadID;
@@ -345,11 +349,11 @@ void CBellRingDlg::SetTime()
 	CString strTemp = _T("");
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT1)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->strFirstTime = strTemp;
+	m_oaThreadParam->strStartTime[0] = strTemp;
 
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT2)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->strSecondTime = strTemp;
+	m_oaThreadParam->strStartTime[1] = strTemp;
 
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT3)));
 	editHelp->GetWindowText(strTemp);
@@ -364,51 +368,21 @@ void CBellRingDlg::SetTime()
 	m_oaThreadParam->iSmallTime = _wtoi(strTemp);
 
 	m_oaThreadParam->timeList.clear();
-	TimeOperate temp(-1);
 
-	//AM
-	bool bIsAM = true;
-	temp = m_oaThreadParam->strFirstTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
+	for (int i = 0; i < 2; i++) {
+		TimeOperate temp(m_oaThreadParam->strStartTime[i]);
+		temp -= m_oaThreadParam->iBigTime;
+		for (int j = 0; j < 4; j++) {
+			int iClassGap = 0;
+			if (j % 2 == 0)
+				iClassGap = m_oaThreadParam->iBigTime;
+			else
+				iClassGap = m_oaThreadParam->iSmallTime;
 
-	temp += m_oaThreadParam->iSmallTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-
-	temp += m_oaThreadParam->iBigTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-
-	temp += m_oaThreadParam->iSmallTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-
-	//PM
-	bIsAM = false;
-	temp = m_oaThreadParam->strSecondTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-
-	temp += m_oaThreadParam->iSmallTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-
-	temp += m_oaThreadParam->iBigTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-
-	temp += m_oaThreadParam->iSmallTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
-	temp += m_oaThreadParam->iClassTime;
-	m_oaThreadParam->PushtimeList(TimeOperate(temp), bIsAM);
+			temp += iClassGap;
+			m_oaThreadParam->PushtimeList(temp, !i);
+		}
+	}
 }
 
 void CBellRingDlg::ReSetRingWait() 
@@ -429,7 +403,9 @@ void CBellRingDlg::ShowTimeList()
 	ringList->ResetContent();
 	while (i < m_oaThreadParam->timeList.size())
 	{
-		ringList->AddString(m_oaThreadParam->timeList[i].GetValue());
+		CString title = i % 2 == 0 ? L"ио©н - " : L"об©н - ";
+		ringList->AddString(title + m_oaThreadParam->timeList[i].GetValue());
+		if (i % 2 != 0) ringList->AddString(L"");
 		i++;
 	}
 }

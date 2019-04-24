@@ -16,7 +16,7 @@ TimeOperate::TimeOperate(CString strTime)
 		this->m_strTime = strTime;
 }
 
-TimeOperate::TimeOperate(TimeOperate& p)
+TimeOperate::TimeOperate(const TimeOperate& p)
 {
 	this->m_strTime = p.m_strTime;
 }
@@ -28,6 +28,11 @@ TimeOperate::~TimeOperate()
 CString TimeOperate::GetValue()
 {
 	return this->m_strTime;
+}
+
+bool TimeOperate::bIsAM()
+{
+	return *this < TimeOperate(L"12:00");
 }
 
 int TimeOperate::TimeToInt(CString strTime)

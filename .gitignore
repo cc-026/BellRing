@@ -2,3 +2,5 @@ Debug
 Release
 BellRing.VC.db
 BellRing.VC.VC.opendb
+*.ipch
+.vs/BellRing/v14/.suo

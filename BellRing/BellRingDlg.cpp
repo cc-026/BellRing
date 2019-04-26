@@ -261,18 +261,11 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 	m_strPreString[bIsAM] = strTemp;
 
 	int iPos = strTemp.Find(_T(":")) < 2 && strTemp.Find(_T(":")) > 0 ? strTemp.Find(_T(":")) : 2;
-	if (strTemp.GetLength() > iPos + 3)
-		strTemp = strTemp.Left(iPos + 3);
-	if (strTemp.GetLength() == iPos && strTemp.GetLength() > iPreTextLen)
-		strTemp.AppendChar(L':');
-	if (strTemp.GetLength() == iPos + 1 && strTemp.GetLength() < iPreTextLen)
-		strTemp = strTemp.Left(iPos);
 
 	CString strHour;
 	AfxExtractSubString(strHour, strTemp, 0, _T(':'));
 	int iHour = bIsAM ? clamp_val(_ttoi(strHour), 0, 11) : clamp_val(_ttoi(strHour), 12, 23);
-	int iHl = strHour.GetLength();
-	if (iHl > 1 || bIsKillFocus)
+	if (strHour.GetLength() > 1 || bIsKillFocus)
 		strHour.Format(_T("%02d"), iHour);
 	else
 		strHour.Format(_T("%d"), iHour);
@@ -280,11 +273,11 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 	CString strMin;
 	AfxExtractSubString(strMin, strTemp, 1, _T(':'));
 	int iMin = clamp_val(_ttoi(strMin), 0, 59);
-	int iMl = strMin.GetLength();
-	if (iMl > 1 || bIsKillFocus)
+	if (strMin.GetLength() > 1 || bIsKillFocus)
 		strMin.Format(_T("%02d"), iMin);
 	else
 		strMin.Format(_T("%d"), iMin);
+
 	if (bIsKillFocus)
 		strTemp = strHour + L":" + strMin;
 	else
@@ -310,6 +303,13 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 				}
 			}
 		}
+
+	if (strTemp.GetLength() > iPos + 3)
+		strTemp = strTemp.Left(iPos + 3);
+	if (strTemp.GetLength() == iPos && strTemp.GetLength() > iPreTextLen)
+		strTemp.AppendChar(L':');
+	if (strTemp.GetLength() == iPos && strTemp.GetLength() < iPreTextLen)
+		strTemp = strTemp.Left(iPos - 1);
 
 	editHelp->SetWindowText(strTemp);
 	editHelp->SetSel(strTemp.GetLength(), strTemp.GetLength(), TRUE);

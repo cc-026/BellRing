@@ -68,7 +68,6 @@ private:
 	void ShowTimeList();
 
 private:
-	int m_iEditLen[2] = { 0 };
 	CString m_strPreString[2] = { _T("") };
 
 // Implementation

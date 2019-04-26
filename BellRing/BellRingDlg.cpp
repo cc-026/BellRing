@@ -103,11 +103,19 @@ unsigned __stdcall TimeShowThread(void* pParam)
 	{
 		SYSTEMTIME st = { 0 };
 		GetLocalTime(&st);
-		pThreadParam->strCurrentTime.Format(_T("%02d:%02d"), st.wHour , st.wMinute);
+		pThreadParam->strCurrentTime.Format(_T("%02d:%02d"), st.wHour, st.wMinute);
 		CString timeShow;
 		timeShow.Format(_T("%s:%02d"), pThreadParam->strCurrentTime, st.wSecond);
 		pThreadParam->pWndTimeText->SetWindowText((LPCTSTR)timeShow);
-		if (pThreadParam->ringWait < pThreadParam->timeList.size() && pThreadParam->timeList[pThreadParam->ringWait] == pThreadParam->strCurrentTime)
+
+		if (timeShow == L"00:00:00") {
+			char buf[64];
+			sprintf_s(buf, "Reset\n");
+			OutputDebugStringA(buf);
+			pThreadParam->pParentCBellRingDlg->ReSetRingFlag();
+		}
+
+		if (pThreadParam->ringTimeFlag < pThreadParam->timeList.size() && pThreadParam->timeList[pThreadParam->ringTimeFlag] == pThreadParam->strCurrentTime)
 		{
 			int iPos;
 			iPos = pThreadParam->pTimeListBox->FindString(0, L"об©н");
@@ -120,7 +128,7 @@ unsigned __stdcall TimeShowThread(void* pParam)
 			hThreadHandle = _beginthreadex(0, 0, RingThread, NULL, CREATE_SUSPENDED, &iThreadID);
 			ResumeThread((HANDLE)hThreadHandle);
 			//PlaySound(TEXT("ring.wav"), NULL, SND_FILENAME);
-			pThreadParam->ringWait++;
+			pThreadParam->ringTimeFlag++;
 		}
 		Sleep(1000);
 	}
@@ -167,6 +175,7 @@ BOOL CBellRingDlg::OnInitDialog()
 	m_oaThreadParam = new SThreadParam();
 	m_oaThreadParam->pWndTimeText = this->GetDlgItem(IDC_TIMETEXT_STATIC);
 	m_oaThreadParam->pTimeListBox = ((CListBox*)(GetDlgItem(IDC_LIST1)));
+	m_oaThreadParam->pParentCBellRingDlg = this;
 	m_oaThreadParam->hThreadHandle = _beginthreadex(0, 0, TimeShowThread, m_oaThreadParam, CREATE_SUSPENDED, &(m_oaThreadParam->iThreadID));
 	ResumeThread((HANDLE)m_oaThreadParam->hThreadHandle);
 	
@@ -181,7 +190,6 @@ BOOL CBellRingDlg::OnInitDialog()
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT5)));
 	editHelp->SetWindowText(L"5");
 	SetTime();
-	ReSetRingWait();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -383,14 +391,16 @@ void CBellRingDlg::SetTime()
 			m_oaThreadParam->PushtimeList(temp, !i);
 		}
 	}
+
+	ReSetRingFlag();
 }
 
-void CBellRingDlg::ReSetRingWait() 
+void CBellRingDlg::ReSetRingFlag() 
 {
-	m_oaThreadParam->ringWait = 0;
-	while (m_oaThreadParam->ringWait < m_oaThreadParam->timeList.size() && m_oaThreadParam->timeList[m_oaThreadParam->ringWait] < m_oaThreadParam->strCurrentTime)
+	m_oaThreadParam->ringTimeFlag = 0;
+	while (m_oaThreadParam->ringTimeFlag < m_oaThreadParam->timeList.size() && m_oaThreadParam->timeList[m_oaThreadParam->ringTimeFlag] < m_oaThreadParam->strCurrentTime)
 	{
-		m_oaThreadParam->ringWait++;
+		m_oaThreadParam->ringTimeFlag++;
 	}
 
 	ShowTimeList();
@@ -398,7 +408,7 @@ void CBellRingDlg::ReSetRingWait()
 
 void CBellRingDlg::ShowTimeList()
 {
-	size_t i = m_oaThreadParam->ringWait;
+	size_t i = m_oaThreadParam->ringTimeFlag;
 	CListBox* ringList = ((CListBox*)(GetDlgItem(IDC_LIST1)));
 	ringList->ResetContent();
 	while (i < m_oaThreadParam->timeList.size())
@@ -488,7 +498,6 @@ void CBellRingDlg::OnBnClickedButton1()
 	if (true)
 	{
 		SetTime();
-		ReSetRingWait();
 		MessageBox(_T("Set time OK"));
 	}
 	else

@@ -15,32 +15,6 @@
 #pragma comment(lib, "winmm.lib")
 #pragma once
 
-struct SThreadParam
-{
-	unsigned int	iThreadID;
-	UINT_PTR		hThreadHandle;
-
-	CString strCurrentTime;
-	CString strStartTime[2];
-
-	int iClassTime;
-	int iBigTime;
-	int iSmallTime;
-
-	std::vector<TimeOperate>timeList;
-	size_t ringWait;
-
-	CWnd* pWndTimeText;
-	CListBox* pTimeListBox;
-
-	bool PushtimeList(TimeOperate &time, bool bIsAM) {
-		TimeOperate after = (time + iClassTime);
-		if (bIsAM == time.bIsAM() && bIsAM == after.bIsAM())
-			{ timeList.push_back(time); timeList.push_back(time+=iClassTime); return true; }
-		return false;
-	}
-};
-
 // CBellRingDlg dialog
 class CBellRingDlg : public CDialogEx
 {
@@ -63,9 +37,11 @@ private:
 	void TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKillFocus);
 	void TextInputFormatMinute(CEdit* editHelp);
 	void SetTime();
-	void ReSetRingWait();
 	void CreateIconOnTray();
 	void ShowTimeList();
+
+public:
+	void ReSetRingFlag();
 
 private:
 	CString m_strPreString[2] = { _T("") };
@@ -97,4 +73,34 @@ public:
 	afx_msg void OnKillFocusEdit2();
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedButton2();
+};
+
+struct SThreadParam
+{
+	unsigned int	iThreadID;
+	UINT_PTR		hThreadHandle;
+
+	CString strCurrentTime;
+	CString strStartTime[2];
+
+	int iClassTime;
+	int iBigTime;
+	int iSmallTime;
+
+	std::vector<TimeOperate>timeList;
+	size_t ringTimeFlag;
+
+	CWnd* pWndTimeText;
+	CListBox* pTimeListBox;
+
+	CBellRingDlg* pParentCBellRingDlg;
+
+	bool PushtimeList(TimeOperate &time, bool bIsAM) {
+		TimeOperate after = (time + iClassTime);
+		if (bIsAM == time.bIsAM() && bIsAM == after.bIsAM())
+		{
+			timeList.push_back(time); timeList.push_back(time += iClassTime); return true;
+		}
+		return false;
+	}
 };

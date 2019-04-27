@@ -39,6 +39,7 @@ private:
 	void SetTime();
 	void CreateIconOnTray();
 	void ShowTimeList();
+	void ReadRingFile();
 
 public:
 	void ReSetRingFlag();
@@ -73,6 +74,8 @@ public:
 	afx_msg void OnKillFocusEdit2();
 	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedButton2();
+	afx_msg void OnBnClickedCheck1();
+	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
 struct SThreadParam
@@ -86,6 +89,8 @@ struct SThreadParam
 	int iClassTime;
 	int iBigTime;
 	int iSmallTime;
+
+	bool bIsMute;
 
 	std::vector<TimeOperate>timeList;
 	size_t ringTimeFlag;
@@ -103,4 +108,11 @@ struct SThreadParam
 		}
 		return false;
 	}
+};
+
+struct SWaveInfo {
+	DWORD dwFileSize;
+	float fVolume;
+	BYTE* pOriginalFileBytes;
+	BYTE* pScaledFileBytes;
 };

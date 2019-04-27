@@ -7,6 +7,7 @@
 #include "BellRingDlg.h"
 #include "afxdialogex.h"
 #include <algorithm>
+#include <fstream>
 #pragma comment(lib, "winmm.lib")
 
 #ifdef _DEBUG
@@ -16,6 +17,7 @@
 #define clamp_val(val, lo, hi) min(max(val, lo), hi)
 
 SThreadParam* m_oaThreadParam;
+SWaveInfo* g_pRingInfo;
 
 // CAboutDlg dialog used for App About
 
@@ -79,11 +81,35 @@ BEGIN_MESSAGE_MAP(CBellRingDlg, CDialogEx)
 	ON_EN_KILLFOCUS(IDC_EDIT2, &CBellRingDlg::OnKillFocusEdit2)
 	ON_BN_CLICKED(IDC_BUTTON1, &CBellRingDlg::OnBnClickedButton1)
 	ON_BN_CLICKED(IDC_BUTTON2, &CBellRingDlg::OnBnClickedButton2)
+	ON_BN_CLICKED(IDC_CHECK1, &CBellRingDlg::OnBnClickedCheck1)
+	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CBellRingDlg::OnNMCustomdrawSlider1)
 END_MESSAGE_MAP()
+
+unsigned __stdcall VolumeThread(void* pParam)
+{
+	if (!g_pRingInfo->pOriginalFileBytes || !g_pRingInfo->pScaledFileBytes)
+		return 0;
+
+	__int8 * pO = (__int8 *)(g_pRingInfo->pOriginalFileBytes);
+	__int8 * pS = (__int8 *)(g_pRingInfo->pScaledFileBytes);
+
+	for (int i = 80 / sizeof(*pS); i < g_pRingInfo->dwFileSize / sizeof(*pS); i++) {
+		// COMMENT FOLLOWING LINE
+		pS[i] = (__int8)((float)pO[i] * g_pRingInfo->fVolume);
+
+	}
+
+	return 0;
+}
 
 unsigned __stdcall RingThread(void* pParam)
 {
-	PlaySound(TEXT("ring.wav"), NULL, SND_FILENAME);
+	//PlaySound(TEXT("ring.wav"), NULL, SND_FILENAME);
+
+	if (!g_pRingInfo->pScaledFileBytes)
+		return 0;
+
+	PlaySound((LPCWSTR)g_pRingInfo->pScaledFileBytes, NULL, SND_MEMORY);
 
 	return 0;
 }
@@ -123,11 +149,14 @@ unsigned __stdcall TimeShowThread(void* pParam)
 				pThreadParam->pTimeListBox->DeleteString(0);
 			pThreadParam->pTimeListBox->DeleteString(0);
 
-			unsigned int	iThreadID;
-			UINT_PTR		hThreadHandle;
-			hThreadHandle = _beginthreadex(0, 0, RingThread, NULL, CREATE_SUSPENDED, &iThreadID);
-			ResumeThread((HANDLE)hThreadHandle);
-			//PlaySound(TEXT("ring.wav"), NULL, SND_FILENAME);
+			if (!pThreadParam->bIsMute) {
+				unsigned int	iThreadID;
+				UINT_PTR		hThreadHandle;
+				hThreadHandle = _beginthreadex(0, 0, RingThread, NULL, CREATE_SUSPENDED, &iThreadID);
+				ResumeThread((HANDLE)hThreadHandle);
+				//PlaySound(TEXT("ring.wav"), NULL, SND_FILENAME);
+			}
+
 			pThreadParam->ringTimeFlag++;
 		}
 		Sleep(1000);
@@ -179,6 +208,11 @@ BOOL CBellRingDlg::OnInitDialog()
 	m_oaThreadParam->hThreadHandle = _beginthreadex(0, 0, TimeShowThread, m_oaThreadParam, CREATE_SUSPENDED, &(m_oaThreadParam->iThreadID));
 	ResumeThread((HANDLE)m_oaThreadParam->hThreadHandle);
 	
+	CSliderCtrl* pVolume = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER1));
+	pVolume->SetPos(pVolume->GetRangeMax());
+	g_pRingInfo = new SWaveInfo();
+	g_pRingInfo->fVolume = 1.0f;
+
 	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT1))); 
 	editHelp->SetWindowText(L"08:30");
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT2)));
@@ -190,6 +224,7 @@ BOOL CBellRingDlg::OnInitDialog()
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT5)));
 	editHelp->SetWindowText(L"5");
 	SetTime();
+	ReadRingFile();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -420,6 +455,26 @@ void CBellRingDlg::ShowTimeList()
 	}
 }
 
+void CBellRingDlg::ReadRingFile()
+{
+	std::ifstream f("ring.wav", std::ios::binary);
+
+	f.seekg(0, std::ios::end);
+	int lim = f.tellg();
+	g_pRingInfo->dwFileSize = lim;
+
+	g_pRingInfo->pOriginalFileBytes = new BYTE[lim];
+	g_pRingInfo->pScaledFileBytes = new BYTE[lim];
+
+	f.seekg(0, std::ios::beg);
+
+	f.read((char *)g_pRingInfo->pOriginalFileBytes, lim);
+	
+	f.close();
+
+	memcpy(g_pRingInfo->pScaledFileBytes, g_pRingInfo->pOriginalFileBytes, lim);
+}
+
 void CBellRingDlg::OnEnChangeEdit1()
 {
 	// TODO:  If this is a RICHEDIT control, the control will not
@@ -549,4 +604,42 @@ LRESULT CBellRingDlg::OnTray(UINT nID, LPARAM lParam)
 	break;
 	}
 	return 0;
+}
+
+void CBellRingDlg::OnBnClickedCheck1()
+{
+	// TODO: Add your control notification handler code here
+	int iState = ((CButton *)GetDlgItem(IDC_CHECK1))->GetCheck();
+	switch (iState) {
+		//case 0:
+		//	break;
+	case 1:
+		m_oaThreadParam->bIsMute = true;
+		break;
+	default:
+		m_oaThreadParam->bIsMute = false;
+		break;
+	}
+}
+
+void CBellRingDlg::OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
+	// TODO: Add your control notification handler code here
+	int iPos = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER1))->GetPos();
+
+	if (g_pRingInfo->fVolume != iPos / 100.0f) {
+		g_pRingInfo->fVolume = iPos / 100.0f;
+
+		unsigned int	iThreadID;
+		UINT_PTR		hThreadHandle;
+		hThreadHandle = _beginthreadex(0, 0, VolumeThread, NULL, CREATE_SUSPENDED, &iThreadID);
+		ResumeThread((HANDLE)hThreadHandle);
+	}
+
+	char buf[128];
+	sprintf_s(buf, "iPos:%f\n", g_pRingInfo->fVolume);
+	OutputDebugStringA(buf);
+
+	*pResult = 0;
 }

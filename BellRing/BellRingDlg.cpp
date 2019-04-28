@@ -16,9 +16,6 @@
 
 #define clamp_val(val, lo, hi) min(max(val, lo), hi)
 
-SThreadParam* m_oaThreadParam;
-SWaveInfo* g_pRingInfo;
-
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialogEx
@@ -87,15 +84,17 @@ END_MESSAGE_MAP()
 
 unsigned __stdcall VolumeThread(void* pParam)
 {
-	if (!g_pRingInfo->pOriginalFileBytes || !g_pRingInfo->pScaledFileBytes)
+	SWaveInfo* pSWaveInfo = (SWaveInfo*)pParam;
+
+	if (!pSWaveInfo || !pSWaveInfo->pOriginalFileBytes || !pSWaveInfo->pScaledFileBytes)
 		return 0;
 
-	__int8 * pO = (__int8 *)(g_pRingInfo->pOriginalFileBytes);
-	__int8 * pS = (__int8 *)(g_pRingInfo->pScaledFileBytes);
+	__int8 * pO = (__int8 *)(pSWaveInfo->pOriginalFileBytes);
+	__int8 * pS = (__int8 *)(pSWaveInfo->pScaledFileBytes);
 
-	for (int i = 80 / sizeof(*pS); i < g_pRingInfo->dwFileSize / sizeof(*pS); i++) {
+	for (int i = 80 / sizeof(*pS); i < pSWaveInfo->dwFileSize / sizeof(*pS); i++) {
 		// COMMENT FOLLOWING LINE
-		pS[i] = (__int8)((float)pO[i] * g_pRingInfo->fVolume);
+		pS[i] = (__int8)((float)pO[i] * pSWaveInfo->fVolume);
 
 	}
 
@@ -106,10 +105,12 @@ unsigned __stdcall RingThread(void* pParam)
 {
 	//PlaySound(TEXT("ring.wav"), NULL, SND_FILENAME);
 
-	if (!g_pRingInfo->pScaledFileBytes)
+	SWaveInfo* pSWaveInfo = (SWaveInfo*)pParam;
+
+	if (!pSWaveInfo || !pSWaveInfo->pScaledFileBytes)
 		return 0;
 
-	PlaySound((LPCWSTR)g_pRingInfo->pScaledFileBytes, NULL, SND_MEMORY);
+	PlaySound((LPCWSTR)pSWaveInfo->pScaledFileBytes, NULL, SND_MEMORY);
 
 	return 0;
 }
@@ -138,7 +139,7 @@ unsigned __stdcall TimeShowThread(void* pParam)
 			char buf[64];
 			sprintf_s(buf, "Reset\n");
 			OutputDebugStringA(buf);
-			pThreadParam->pParentCBellRingDlg->ReSetRingFlag();
+			((CBellRingDlg*)pThreadParam->pParentCBellRingDlg)->ReSetRingFlag();
 		}
 
 		if (pThreadParam->ringTimeFlag < pThreadParam->timeList.size() && pThreadParam->timeList[pThreadParam->ringTimeFlag] == pThreadParam->strCurrentTime)
@@ -152,7 +153,7 @@ unsigned __stdcall TimeShowThread(void* pParam)
 			if (!pThreadParam->bIsMute) {
 				unsigned int	iThreadID;
 				UINT_PTR		hThreadHandle;
-				hThreadHandle = _beginthreadex(0, 0, RingThread, NULL, CREATE_SUSPENDED, &iThreadID);
+				hThreadHandle = _beginthreadex(0, 0, RingThread, pThreadParam->pRingInfo, CREATE_SUSPENDED, &iThreadID);
 				ResumeThread((HANDLE)hThreadHandle);
 				//PlaySound(TEXT("ring.wav"), NULL, SND_FILENAME);
 			}
@@ -201,17 +202,17 @@ BOOL CBellRingDlg::OnInitDialog()
 	//style &= ~(WS_CAPTION);	//修改窗口类型，显示标题栏
 	::SetWindowLong(m_hWnd, GWL_STYLE, style);	//设置窗口类型
 
-	m_oaThreadParam = new SThreadParam();
-	m_oaThreadParam->pWndTimeText = this->GetDlgItem(IDC_TIMETEXT_STATIC);
-	m_oaThreadParam->pTimeListBox = ((CListBox*)(GetDlgItem(IDC_LIST1)));
-	m_oaThreadParam->pParentCBellRingDlg = this;
-	m_oaThreadParam->hThreadHandle = _beginthreadex(0, 0, TimeShowThread, m_oaThreadParam, CREATE_SUSPENDED, &(m_oaThreadParam->iThreadID));
-	ResumeThread((HANDLE)m_oaThreadParam->hThreadHandle);
+	m_pThreadParam = new SThreadParam();
+	m_pThreadParam->pWndTimeText = this->GetDlgItem(IDC_TIMETEXT_STATIC);
+	m_pThreadParam->pTimeListBox = ((CListBox*)(GetDlgItem(IDC_LIST1)));
+	m_pThreadParam->pParentCBellRingDlg = this;
+	m_pThreadParam->hThreadHandle = _beginthreadex(0, 0, TimeShowThread, m_pThreadParam, CREATE_SUSPENDED, &(m_pThreadParam->iThreadID));
+	ResumeThread((HANDLE)m_pThreadParam->hThreadHandle);
 	
 	CSliderCtrl* pVolume = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER1));
 	pVolume->SetPos(pVolume->GetRangeMax());
-	g_pRingInfo = new SWaveInfo();
-	g_pRingInfo->fVolume = 1.0f;
+	m_pThreadParam->pRingInfo = new SWaveInfo();
+	m_pThreadParam->pRingInfo->fVolume = 1.0f;
 
 	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT1))); 
 	editHelp->SetWindowText(L"08:30");
@@ -392,38 +393,38 @@ void CBellRingDlg::SetTime()
 	CString strTemp = _T("");
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT1)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->strStartTime[0] = strTemp;
+	m_pThreadParam->strStartTime[0] = strTemp;
 
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT2)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->strStartTime[1] = strTemp;
+	m_pThreadParam->strStartTime[1] = strTemp;
 
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT3)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->iClassTime = _wtoi(strTemp);
+	m_pThreadParam->iClassTime = _wtoi(strTemp);
 
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT4)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->iBigTime = _wtoi(strTemp);
+	m_pThreadParam->iBigTime = _wtoi(strTemp);
 
 	editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT5)));
 	editHelp->GetWindowText(strTemp);
-	m_oaThreadParam->iSmallTime = _wtoi(strTemp);
+	m_pThreadParam->iSmallTime = _wtoi(strTemp);
 
-	m_oaThreadParam->timeList.clear();
+	m_pThreadParam->timeList.clear();
 
 	for (int i = 0; i < 2; i++) {
-		TimeOperate temp(m_oaThreadParam->strStartTime[i]);
-		temp -= m_oaThreadParam->iBigTime;
+		TimeOperate temp(m_pThreadParam->strStartTime[i]);
+		temp -= m_pThreadParam->iBigTime;
 		for (int j = 0; j < 4; j++) {
 			int iClassGap = 0;
 			if (j % 2 == 0)
-				iClassGap = m_oaThreadParam->iBigTime;
+				iClassGap = m_pThreadParam->iBigTime;
 			else
-				iClassGap = m_oaThreadParam->iSmallTime;
+				iClassGap = m_pThreadParam->iSmallTime;
 
 			temp += iClassGap;
-			m_oaThreadParam->PushtimeList(temp, !i);
+			m_pThreadParam->PushtimeList(temp, !i);
 		}
 	}
 
@@ -432,10 +433,10 @@ void CBellRingDlg::SetTime()
 
 void CBellRingDlg::ReSetRingFlag() 
 {
-	m_oaThreadParam->ringTimeFlag = 0;
-	while (m_oaThreadParam->ringTimeFlag < m_oaThreadParam->timeList.size() && m_oaThreadParam->timeList[m_oaThreadParam->ringTimeFlag] < m_oaThreadParam->strCurrentTime)
+	m_pThreadParam->ringTimeFlag = 0;
+	while (m_pThreadParam->ringTimeFlag < m_pThreadParam->timeList.size() && m_pThreadParam->timeList[m_pThreadParam->ringTimeFlag] < m_pThreadParam->strCurrentTime)
 	{
-		m_oaThreadParam->ringTimeFlag++;
+		m_pThreadParam->ringTimeFlag++;
 	}
 
 	ShowTimeList();
@@ -443,13 +444,13 @@ void CBellRingDlg::ReSetRingFlag()
 
 void CBellRingDlg::ShowTimeList()
 {
-	size_t i = m_oaThreadParam->ringTimeFlag;
+	size_t i = m_pThreadParam->ringTimeFlag;
 	CListBox* ringList = ((CListBox*)(GetDlgItem(IDC_LIST1)));
 	ringList->ResetContent();
-	while (i < m_oaThreadParam->timeList.size())
+	while (i < m_pThreadParam->timeList.size())
 	{
 		CString title = i % 2 == 0 ? L"上课 - " : L"下课 - ";
-		ringList->AddString(title + m_oaThreadParam->timeList[i].GetValue());
+		ringList->AddString(title + m_pThreadParam->timeList[i].GetValue());
 		if (i % 2 != 0) ringList->AddString(L"");
 		i++;
 	}
@@ -459,20 +460,25 @@ void CBellRingDlg::ReadRingFile()
 {
 	std::ifstream f("ring.wav", std::ios::binary);
 
+	if (!f) {
+		MessageBox(L"Missing \"ring.wav\"",L"Error!", MB_OK | MB_ICONERROR);
+		return;
+	}
+
 	f.seekg(0, std::ios::end);
 	int lim = f.tellg();
-	g_pRingInfo->dwFileSize = lim;
+	m_pThreadParam->pRingInfo->dwFileSize = lim;
 
-	g_pRingInfo->pOriginalFileBytes = new BYTE[lim];
-	g_pRingInfo->pScaledFileBytes = new BYTE[lim];
+	m_pThreadParam->pRingInfo->pOriginalFileBytes = new BYTE[lim];
+	m_pThreadParam->pRingInfo->pScaledFileBytes = new BYTE[lim];
 
 	f.seekg(0, std::ios::beg);
 
-	f.read((char *)g_pRingInfo->pOriginalFileBytes, lim);
+	f.read((char *)m_pThreadParam->pRingInfo->pOriginalFileBytes, lim);
 	
 	f.close();
 
-	memcpy(g_pRingInfo->pScaledFileBytes, g_pRingInfo->pOriginalFileBytes, lim);
+	memcpy(m_pThreadParam->pRingInfo->pScaledFileBytes, m_pThreadParam->pRingInfo->pOriginalFileBytes, lim);
 }
 
 void CBellRingDlg::OnEnChangeEdit1()
@@ -614,10 +620,10 @@ void CBellRingDlg::OnBnClickedCheck1()
 		//case 0:
 		//	break;
 	case 1:
-		m_oaThreadParam->bIsMute = true;
+		m_pThreadParam->bIsMute = true;
 		break;
 	default:
-		m_oaThreadParam->bIsMute = false;
+		m_pThreadParam->bIsMute = false;
 		break;
 	}
 }
@@ -628,17 +634,17 @@ void CBellRingDlg::OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult)
 	// TODO: Add your control notification handler code here
 	int iPos = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER1))->GetPos();
 
-	if (g_pRingInfo->fVolume != iPos / 100.0f) {
-		g_pRingInfo->fVolume = iPos / 100.0f;
+	if (m_pThreadParam->pRingInfo->fVolume != iPos / 100.0f) {
+		m_pThreadParam->pRingInfo->fVolume = iPos / 100.0f;
 
 		unsigned int	iThreadID;
 		UINT_PTR		hThreadHandle;
-		hThreadHandle = _beginthreadex(0, 0, VolumeThread, NULL, CREATE_SUSPENDED, &iThreadID);
+		hThreadHandle = _beginthreadex(0, 0, VolumeThread, m_pThreadParam->pRingInfo, CREATE_SUSPENDED, &iThreadID);
 		ResumeThread((HANDLE)hThreadHandle);
 	}
 
 	char buf[128];
-	sprintf_s(buf, "iPos:%f\n", g_pRingInfo->fVolume);
+	sprintf_s(buf, "iPos:%f\n", m_pThreadParam->pRingInfo->fVolume);
 	OutputDebugStringA(buf);
 
 	*pResult = 0;

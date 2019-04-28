@@ -16,6 +16,47 @@
 #pragma once
 
 // CBellRingDlg dialog
+struct SWaveInfo {
+	DWORD dwFileSize;
+	float fVolume;
+	BYTE* pOriginalFileBytes;
+	BYTE* pScaledFileBytes;
+};
+
+struct SThreadParam
+{
+	unsigned int	iThreadID;
+	UINT_PTR		hThreadHandle;
+
+	CString strCurrentTime;
+	CString strStartTime[2];
+
+	SWaveInfo* pRingInfo;
+
+	int iClassTime;
+	int iBigTime;
+	int iSmallTime;
+
+	bool bIsMute;
+
+	std::vector<TimeOperate>timeList;
+	size_t ringTimeFlag;
+
+	CWnd* pWndTimeText;
+	CListBox* pTimeListBox;
+
+	CWnd* pParentCBellRingDlg;
+
+	bool PushtimeList(TimeOperate &time, bool bIsAM) {
+		TimeOperate after = (time + iClassTime);
+		if (bIsAM == time.bIsAM() && bIsAM == after.bIsAM())
+		{
+			timeList.push_back(time); timeList.push_back(time += iClassTime); return true;
+		}
+		return false;
+	}
+};
+
 class CBellRingDlg : public CDialogEx
 {
 // Construction
@@ -45,6 +86,7 @@ public:
 	void ReSetRingFlag();
 
 private:
+	SThreadParam* m_pThreadParam;
 	CString m_strPreString[2] = { _T("") };
 
 // Implementation
@@ -78,41 +120,5 @@ public:
 	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
 };
 
-struct SThreadParam
-{
-	unsigned int	iThreadID;
-	UINT_PTR		hThreadHandle;
 
-	CString strCurrentTime;
-	CString strStartTime[2];
 
-	int iClassTime;
-	int iBigTime;
-	int iSmallTime;
-
-	bool bIsMute;
-
-	std::vector<TimeOperate>timeList;
-	size_t ringTimeFlag;
-
-	CWnd* pWndTimeText;
-	CListBox* pTimeListBox;
-
-	CBellRingDlg* pParentCBellRingDlg;
-
-	bool PushtimeList(TimeOperate &time, bool bIsAM) {
-		TimeOperate after = (time + iClassTime);
-		if (bIsAM == time.bIsAM() && bIsAM == after.bIsAM())
-		{
-			timeList.push_back(time); timeList.push_back(time += iClassTime); return true;
-		}
-		return false;
-	}
-};
-
-struct SWaveInfo {
-	DWORD dwFileSize;
-	float fVolume;
-	BYTE* pOriginalFileBytes;
-	BYTE* pScaledFileBytes;
-};

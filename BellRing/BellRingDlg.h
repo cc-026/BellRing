@@ -107,17 +107,21 @@ protected:
 	//afx_msg LRESULT OnTray(UINT nID, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 public:
-	afx_msg void OnEnChangeEdit1();
-	afx_msg void OnEnChangeEdit2();
-	afx_msg void OnEnChangeEdit3();
-	afx_msg void OnEnChangeEdit4();
-	afx_msg void OnEnChangeEdit5();
-	afx_msg void OnKillFocusEdit1();
-	afx_msg void OnKillFocusEdit2();
+	afx_msg void OnEnChangeEditAM();
+	afx_msg void OnEnChangeEditPM();
+	afx_msg void OnEnChangeEditClassTime();
+	afx_msg void OnEnChangeEditGapBig();
+	afx_msg void OnEnChangeEditGapSmall();
+	afx_msg void OnKillFocusEditAM();
+	afx_msg void OnKillFocusEditPM();
 	afx_msg void OnBnClickedButtonSettime();
 	afx_msg void OnBnClickedButtonHide();
 	afx_msg void OnBnClickedCheck1();
 	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
+public:
+	int m_iClassMin;
+	int m_iBigGap;
+	int m_iSmallGap;
 };
 
 

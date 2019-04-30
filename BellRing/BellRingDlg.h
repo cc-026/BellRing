@@ -114,8 +114,8 @@ public:
 	afx_msg void OnEnChangeEdit5();
 	afx_msg void OnKillFocusEdit1();
 	afx_msg void OnKillFocusEdit2();
-	afx_msg void OnBnClickedButton1();
-	afx_msg void OnBnClickedButton2();
+	afx_msg void OnBnClickedButtonSettime();
+	afx_msg void OnBnClickedButtonHide();
 	afx_msg void OnBnClickedCheck1();
 	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
 };

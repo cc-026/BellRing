@@ -76,8 +76,8 @@ BEGIN_MESSAGE_MAP(CBellRingDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_EDIT5, &CBellRingDlg::OnEnChangeEdit5)
 	ON_EN_KILLFOCUS(IDC_EDIT1, &CBellRingDlg::OnKillFocusEdit1)
 	ON_EN_KILLFOCUS(IDC_EDIT2, &CBellRingDlg::OnKillFocusEdit2)
-	ON_BN_CLICKED(IDC_BUTTON1, &CBellRingDlg::OnBnClickedButton1)
-	ON_BN_CLICKED(IDC_BUTTON2, &CBellRingDlg::OnBnClickedButton2)
+	ON_BN_CLICKED(IDC_BUTTON_SETTIME, &CBellRingDlg::OnBnClickedButtonSettime)
+	ON_BN_CLICKED(IDC_BUTTON_HIDE, &CBellRingDlg::OnBnClickedButtonHide)
 	ON_BN_CLICKED(IDC_CHECK1, &CBellRingDlg::OnBnClickedCheck1)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CBellRingDlg::OnNMCustomdrawSlider1)
 END_MESSAGE_MAP()
@@ -285,11 +285,16 @@ BOOL CBellRingDlg::PreTranslateMessage(MSG* pMsg)
 	if (pMsg->message == WM_KEYDOWN&&pMsg->wParam == VK_ESCAPE)
 	{
 		// 如果消息是键盘按下事件，且是Esc键，执行以下代码（什么都不做，你可以自己添加想要的代码）
+		GetDlgItem(IDC_BUTTON_HIDE)->SendMessage(BM_CLICK);
 		return TRUE;
 	}
 	if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN)
 	{
 		// 如果消息是键盘按下事件，且是Entert键，执行以下代码（什么都不做，你可以自己添加想要的代码）
+		//GetNextDlgTabItem(GetFocus())->SetFocus();
+		//SendDlgItemMessage(GetFocus()->GetDlgCtrlID(), EM_SETSEL, 0, -1);
+		GetDlgItem(IDC_BUTTON_SETTIME)-> SetFocus();
+		GetDlgItem(IDC_BUTTON_SETTIME)-> SendMessage(BM_CLICK);
 		return TRUE;
 	}
 	return CDialogEx::PreTranslateMessage(pMsg);
@@ -302,7 +307,7 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 	int iPreTextLen = m_strPreString[bIsAM].GetLength();
 	if (strTemp == m_strPreString[bIsAM] && !bIsKillFocus)
 		return;
-	m_strPreString[bIsAM] = strTemp;
+	//m_strPreString[bIsAM] = strTemp;
 
 	int iPos = strTemp.Find(_T(":")) < 2 && strTemp.Find(_T(":")) > 0 ? strTemp.Find(_T(":")) : 2;
 
@@ -316,14 +321,24 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 
 	CString strMin;
 	AfxExtractSubString(strMin, strTemp, 1, _T(':'));
+	if (strMin.GetLength() > 2)strMin = strMin.Left(2);
 	int iMin = clamp_val(_ttoi(strMin), 0, 59);
 	if (strMin.GetLength() > 1 || bIsKillFocus)
 		strMin.Format(_T("%02d"), iMin);
 	else
 		strMin.Format(_T("%d"), iMin);
 
-	if (bIsKillFocus)
+	CWnd* p = GetFocus();
+
+	if (p == (CWnd*)editHelp) {
+		CString str = L"as";
+		OutputDebugString(str);
+	}
+
+	if (bIsKillFocus) {
 		strTemp = strHour + L":" + strMin;
+		iPos = 2;
+	}
 	else
 		for (int i = 0; i < strTemp.GetLength(); i++)
 		{
@@ -348,13 +363,18 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 			}
 		}
 
-	if (strTemp.GetLength() > iPos + 3)
+	if (strTemp.GetLength() > iPos + 3) {
 		strTemp = strTemp.Left(iPos + 3);
+		GetNextDlgTabItem(GetFocus())->SetFocus();
+		SendDlgItemMessage(GetFocus()->GetDlgCtrlID(), EM_SETSEL, 0, -1);
+		return;
+	}
 	if (strTemp.GetLength() == iPos && strTemp.GetLength() > iPreTextLen)
 		strTemp.AppendChar(L':');
 	if (strTemp.GetLength() == iPos && strTemp.GetLength() < iPreTextLen)
 		strTemp = strTemp.Left(iPos - 1);
 
+	m_strPreString[bIsAM] = strTemp;
 	editHelp->SetWindowText(strTemp);
 	editHelp->SetSel(strTemp.GetLength(), strTemp.GetLength(), TRUE);
 }
@@ -553,7 +573,7 @@ void CBellRingDlg::OnKillFocusEdit2()
 	TextInputFormatTime(editHelp, false, true);
 }
 
-void CBellRingDlg::OnBnClickedButton1()
+void CBellRingDlg::OnBnClickedButtonSettime()
 {
 	// TODO: Add your control notification handler code here
 	if (true)
@@ -567,7 +587,7 @@ void CBellRingDlg::OnBnClickedButton1()
 	}
 }
 
-void CBellRingDlg::OnBnClickedButton2()
+void CBellRingDlg::OnBnClickedButtonHide()
 {
 	// TODO: Add your control notification handler code here
 	CreateIconOnTray();

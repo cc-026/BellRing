@@ -189,7 +189,7 @@ LRESULT CALLBACK TimeEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 		if (pEdit)
 			pEdit->GetSel(nStartChar, nEndChar);
 
-		if (bHaveColon && str.GetLength() >= str.Find(L":") + 3 && nStartChar==nEndChar) {
+		if (bHaveColon && str.GetLength() >= str.Find(L":") + 3 && nStartChar == nEndChar) {
 			::SetFocus(::GetNextDlgTabItem(::GetParent(hWnd), hWnd, false));
 			::SendDlgItemMessage(::GetParent(GetFocus()), ::GetDlgCtrlID(GetFocus()), EM_SETSEL, 0, -1);
 			return 1;
@@ -250,6 +250,7 @@ BOOL CBellRingDlg::OnInitDialog()
 	GetDlgItem(IDC_EDIT_CLASSTIME)->SetWindowText(L"45");
 	GetDlgItem(IDC_EDIT_GAPBIG)->SetWindowText(L"10");
 	GetDlgItem(IDC_EDIT_GAPSMALL)->SetWindowText(L"5");
+	UpdateData();
 	SetTime();
 	ReadRingFile();
 	
@@ -376,33 +377,33 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 	editHelp->SetSel(strTemp.GetLength(), strTemp.GetLength(), TRUE);
 }
 
-void CBellRingDlg::TextInputFormatMinute(CEdit* editHelp)
-{
-	CString strTemp = _T("");
-	editHelp->GetWindowText(strTemp);
-	int len = strTemp.GetLength();
-
-	for (int i = 0; i < len; i++)
-	{
-		if (i<2)
-		{
-			if (strTemp.GetAt(i) < '0' || strTemp.GetAt(i) > '9')
-			{
-				strTemp = strTemp.Left(i);
-				editHelp->SetWindowText(strTemp);
-				editHelp->SetSel(i, i, TRUE);
-
-				return;
-			}
-		} 
-		else
-		{
-			strTemp = strTemp.Left(i);
-			editHelp->SetWindowText(strTemp);
-			editHelp->SetSel(i, i, TRUE);
-		}
-	}
-}
+//void CBellRingDlg::TextInputFormatMinute(CEdit* editHelp)
+//{
+//	CString strTemp = _T("");
+//	editHelp->GetWindowText(strTemp);
+//	int len = strTemp.GetLength();
+//
+//	for (int i = 0; i < len; i++)
+//	{
+//		if (i<2)
+//		{
+//			if (strTemp.GetAt(i) < '0' || strTemp.GetAt(i) > '9')
+//			{
+//				strTemp = strTemp.Left(i);
+//				editHelp->SetWindowText(strTemp);
+//				editHelp->SetSel(i, i, TRUE);
+//
+//				return;
+//			}
+//		} 
+//		else
+//		{
+//			strTemp = strTemp.Left(i);
+//			editHelp->SetWindowText(strTemp);
+//			editHelp->SetSel(i, i, TRUE);
+//		}
+//	}
+//}
 
 void CBellRingDlg::SetTime()
 {
@@ -524,9 +525,13 @@ void CBellRingDlg::OnEnChangeEditClassTime()
 	// with the ENM_CHANGE flag ORed into the mask.
 
 	// TODO:  Add your control notification handler code here
-	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT_CLASSTIME)));
-	TextInputFormatMinute(editHelp);
-	//UpdateData();
+	//CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT_CLASSTIME)));
+	//TextInputFormatMinute(editHelp);
+	int iClassMin = m_iClassMin;
+	if (!UpdateData()) {
+		m_iClassMin = iClassMin;
+		UpdateData(FALSE);
+	}
 }
 
 void CBellRingDlg::OnEnChangeEditGapBig()
@@ -537,9 +542,13 @@ void CBellRingDlg::OnEnChangeEditGapBig()
 	// with the ENM_CHANGE flag ORed into the mask.
 
 	// TODO:  Add your control notification handler code here
-	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT_GAPBIG)));
-	TextInputFormatMinute(editHelp);
-	//UpdateData();
+	//CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT_GAPBIG)));
+	//TextInputFormatMinute(editHelp);
+	int iBigGap = m_iBigGap;
+	if (!UpdateData()) {
+		m_iBigGap = iBigGap;
+		UpdateData(FALSE);
+	}
 }
 
 void CBellRingDlg::OnEnChangeEditGapSmall()
@@ -550,9 +559,13 @@ void CBellRingDlg::OnEnChangeEditGapSmall()
 	// with the ENM_CHANGE flag ORed into the mask.
 
 	// TODO:  Add your control notification handler code here
-	CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT_GAPSMALL)));
-	TextInputFormatMinute(editHelp);
-	//UpdateData();
+	//CEdit* editHelp = ((CEdit*)(GetDlgItem(IDC_EDIT_GAPSMALL)));
+	//TextInputFormatMinute(editHelp);
+	int iSmallGap = m_iSmallGap;
+	if (!UpdateData()) {
+		m_iSmallGap = iSmallGap;
+		UpdateData(FALSE);
+	}
 
 }
 

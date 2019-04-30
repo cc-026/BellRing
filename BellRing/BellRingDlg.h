@@ -76,7 +76,7 @@ public:
 
 private:
 	void TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKillFocus);
-	void TextInputFormatMinute(CEdit* editHelp);
+	//void TextInputFormatMinute(CEdit* editHelp);
 	void SetTime();
 	void CreateIconOnTray();
 	void ShowTimeList();

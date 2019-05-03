@@ -194,7 +194,8 @@ LRESULT CALLBACK TimeEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 			::SendDlgItemMessage(::GetParent(GetFocus()), ::GetDlgCtrlID(GetFocus()), EM_SETSEL, 0, -1);
 			return 1;
 		}
-		if ((wParam < '0' || wParam > '9') && !bInputColon && nStartChar == nEndChar)
+
+		if ((wParam < '0' || wParam > '9') && !bInputColon)
 			return 1;
 	}
 

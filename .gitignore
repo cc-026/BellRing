@@ -5,3 +5,4 @@ BellRing.VC.VC.opendb
 *.ipch
 .vs/BellRing/v14/.suo
 *.tmp
+BellRing/cfg

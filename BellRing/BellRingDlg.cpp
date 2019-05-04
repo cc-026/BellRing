@@ -89,6 +89,8 @@ BEGIN_MESSAGE_MAP(CBellRingDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_HIDE, &CBellRingDlg::OnBnClickedButtonHide)
 	ON_BN_CLICKED(IDC_CHECK1, &CBellRingDlg::OnBnClickedCheck1)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CBellRingDlg::OnNMCustomdrawSlider1)
+	ON_WM_DESTROY()
+	ON_WM_POWERBROADCAST()
 END_MESSAGE_MAP()
 
 unsigned __stdcall VolumeThread(void* pParam)
@@ -238,23 +240,18 @@ BOOL CBellRingDlg::OnInitDialog()
 	m_pThreadParam->pWndTimeText = this->GetDlgItem(IDC_TIMETEXT_STATIC);
 	m_pThreadParam->pTimeListBox = ((CListBox*)(GetDlgItem(IDC_LIST1)));
 	m_pThreadParam->pParentCBellRingDlg = this;
-	m_pThreadParam->hThreadHandle = _beginthreadex(0, 0, TimeShowThread, m_pThreadParam, CREATE_SUSPENDED, &(m_pThreadParam->iThreadID));
-	ResumeThread((HANDLE)m_pThreadParam->hThreadHandle);
 	
 	CSliderCtrl* pVolume = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER1));
 	pVolume->SetPos(pVolume->GetRangeMax());
 	m_pThreadParam->pRingInfo = new SWaveInfo();
 	m_pThreadParam->pRingInfo->fVolume = 1.0f;
 
-	GetDlgItem(IDC_EDIT_AM)->SetWindowText(L"08:30");
-	GetDlgItem(IDC_EDIT_PM)->SetWindowText(L"13:00");
-	GetDlgItem(IDC_EDIT_CLASSTIME)->SetWindowText(L"45");
-	GetDlgItem(IDC_EDIT_GAPBIG)->SetWindowText(L"10");
-	GetDlgItem(IDC_EDIT_GAPSMALL)->SetWindowText(L"5");
-	UpdateData();
+	m_pThreadParam->hThreadHandle = _beginthreadex(0, 0, TimeShowThread, m_pThreadParam, CREATE_SUSPENDED, &(m_pThreadParam->iThreadID));
+	ResumeThread((HANDLE)m_pThreadParam->hThreadHandle);
+
+	ReadSettingFile();
 	SetTime();
 	ReadRingFile();
-	
 	prevProc[IDC_EDIT_AM - IDC_EDIT_AM] = (WNDPROC)SetWindowLongPtr(GetDlgItem(IDC_EDIT_AM)->m_hWnd, GWLP_WNDPROC, (LONG_PTR)TimeEditProc);
 	prevProc[IDC_EDIT_PM - IDC_EDIT_AM] = (WNDPROC)SetWindowLongPtr(GetDlgItem(IDC_EDIT_PM)->m_hWnd, GWLP_WNDPROC, (LONG_PTR)TimeEditProc);
 
@@ -494,6 +491,53 @@ void CBellRingDlg::ReadRingFile()
 	memcpy(m_pThreadParam->pRingInfo->pScaledFileBytes, m_pThreadParam->pRingInfo->pOriginalFileBytes, lim);
 }
 
+void CBellRingDlg::ReadSettingFile()
+{
+	CFile cfg;
+	CString strTimeAM = L"08:30";
+	CString strTimePM = L"13:00";
+	CString strClassTime = L"45";
+	CString strBigGap = L"10";
+	CString strSmallGap = L"5";
+	bool bMute = false;
+	int iPos = 100;
+	if (cfg.Open(L"cfg", CFile::modeRead)) {
+		CArchive ar(&cfg, CArchive::load);
+		ar >> strTimeAM >> strTimePM >> strClassTime >> strBigGap >> strSmallGap >> bMute >> iPos;
+		cfg.Close();
+		//MessageBox(strTimeAM + strTimePM + strClassTime + strBigGap + strSmallGap);
+	}
+
+	GetDlgItem(IDC_EDIT_AM)->SetWindowText(strTimeAM);
+	GetDlgItem(IDC_EDIT_PM)->SetWindowText(strTimePM);
+	GetDlgItem(IDC_EDIT_CLASSTIME)->SetWindowText(strClassTime);
+	GetDlgItem(IDC_EDIT_GAPBIG)->SetWindowText(strBigGap);
+	GetDlgItem(IDC_EDIT_GAPSMALL)->SetWindowText(strSmallGap);
+
+	CButton * pMuteButton = ((CButton *)GetDlgItem(IDC_CHECK1));
+	pMuteButton->SetCheck(!bMute);
+	pMuteButton->SendMessage(BM_CLICK);
+	CSliderCtrl* pVolumeSlider = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER1));
+	pVolumeSlider->SetPos(iPos);
+	pVolumeSlider->SendMessage(NM_CUSTOMDRAW);
+	UpdateData();
+}
+
+void CBellRingDlg::SaveSettingToFile()
+{
+	CFile cfg(L"cfg", CFile::modeCreate | CFile::modeWrite);
+	CArchive ar(&cfg, CArchive::store);
+	CString strTimeAM, strTimePM, strClassTime, strBigGap, strSmallGap;
+	GetDlgItemText(IDC_EDIT_AM, strTimeAM);
+	GetDlgItemText(IDC_EDIT_PM, strTimePM);
+	GetDlgItemText(IDC_EDIT_CLASSTIME, strClassTime);
+	GetDlgItemText(IDC_EDIT_GAPBIG, strBigGap);
+	GetDlgItemText(IDC_EDIT_GAPSMALL, strSmallGap);
+	bool bMute = m_pThreadParam->bIsMute;
+	int iPos = ((CSliderCtrl*)GetDlgItem(IDC_SLIDER1))->GetPos();
+	ar << strTimeAM << strTimePM << strClassTime << strBigGap << strSmallGap << bMute << iPos;
+}
+
 void CBellRingDlg::OnEnChangeEditAM()
 {
 	// TODO:  If this is a RICHEDIT control, the control will not
@@ -588,6 +632,7 @@ void CBellRingDlg::OnBnClickedButtonSettime()
 	if (true)
 	{
 		SetTime();
+		SaveSettingToFile();
 		MessageBox(_T("Set time OK"));
 	}
 	else
@@ -655,6 +700,7 @@ void CBellRingDlg::OnBnClickedCheck1()
 		m_pThreadParam->bIsMute = false;
 		break;
 	}
+	SaveSettingToFile();
 }
 
 void CBellRingDlg::OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult)
@@ -665,6 +711,7 @@ void CBellRingDlg::OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult)
 
 	if (m_pThreadParam->pRingInfo->fVolume != iPos / 100.0f) {
 		m_pThreadParam->pRingInfo->fVolume = iPos / 100.0f;
+		SaveSettingToFile();
 
 		unsigned int	iThreadID;
 		UINT_PTR		hThreadHandle;
@@ -673,8 +720,29 @@ void CBellRingDlg::OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 
 	char buf[128];
-	sprintf_s(buf, "iPos:%f\n", m_pThreadParam->pRingInfo->fVolume);
+	sprintf_s(buf, "fVolume:%f\n", m_pThreadParam->pRingInfo->fVolume);
 	OutputDebugStringA(buf);
 
 	*pResult = 0;
+}
+
+void CBellRingDlg::OnDestroy()
+{
+	CDialogEx::OnDestroy();
+
+	// TODO: Add your message handler code here
+	delete m_pThreadParam->pRingInfo->pScaledFileBytes;
+	m_pThreadParam->pRingInfo->pScaledFileBytes = NULL;
+	delete m_pThreadParam->pRingInfo->pOriginalFileBytes;
+	m_pThreadParam->pRingInfo->pOriginalFileBytes = NULL;
+	delete m_pThreadParam->pRingInfo;
+	m_pThreadParam->pRingInfo = NULL;
+	delete m_pThreadParam;
+	m_pThreadParam = NULL;
+}
+
+UINT CBellRingDlg::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
+{
+	if (nPowerEvent == PBT_APMRESUMEAUTOMATIC) ReSetRingFlag();
+	return CDialogEx::OnPowerBroadcast(nPowerEvent, nEventData);
 }

@@ -81,6 +81,8 @@ private:
 	void CreateIconOnTray();
 	void ShowTimeList();
 	void ReadRingFile();
+	void ReadSettingFile();
+	void SaveSettingToFile();
 
 public:
 	void ReSetRingFlag();
@@ -118,10 +120,13 @@ public:
 	afx_msg void OnBnClickedButtonHide();
 	afx_msg void OnBnClickedCheck1();
 	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnDestroy();
+	afx_msg UINT OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData);
 public:
 	int m_iClassMin;
 	int m_iBigGap;
 	int m_iSmallGap;
+
 };
 
 

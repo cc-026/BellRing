@@ -334,8 +334,8 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 {
 	CString strTemp;
 	editHelp->GetWindowText(strTemp);
-	int iPreTextLen = m_strPreString[bIsAM].GetLength();
-	if (strTemp == m_strPreString[bIsAM] && !bIsKillFocus)
+	int iPreTextLen = m_strPreTimeString[bIsAM].GetLength();
+	if (strTemp == m_strPreTimeString[bIsAM] && !bIsKillFocus)
 		return;
 
 	int iPos = strTemp.Find(_T(":")) < 2 && strTemp.Find(_T(":")) >= 0 ? strTemp.Find(_T(":")) : 2;
@@ -372,7 +372,7 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 	else 
 		strTemp = strHour;
 
-	m_strPreString[bIsAM] = strTemp;
+	m_strPreTimeString[bIsAM] = strTemp;
 	editHelp->SetWindowText(strTemp);
 	editHelp->SetSel(strTemp.GetLength(), strTemp.GetLength(), TRUE);
 }
@@ -415,29 +415,20 @@ void CBellRingDlg::SetTime()
 	GetDlgItemText(IDC_EDIT_PM, strTemp);
 	strStartTime[1] = strTemp;
 
-	GetDlgItemText(IDC_EDIT_CLASSTIME, strTemp);
-	int iClassTime = _wtoi(strTemp);
-
-	GetDlgItemText(IDC_EDIT_GAPBIG, strTemp);
-	int iBigTime = _wtoi(strTemp);
-
-	GetDlgItemText(IDC_EDIT_GAPSMALL, strTemp);
-	int iSmallTime = _wtoi(strTemp);
-
 	m_pThreadParam->timeList.clear();
 
 	for (int i = 0; i < 2; i++) {
 		TimeOperate temp(strStartTime[i]);
-		temp -= iBigTime;
+		temp -= m_iBigGap;
 		for (int j = 0; j < 4; j++) {
 			int iClassGap = 0;
 			if (j % 2 == 0)
-				iClassGap = iBigTime;
+				iClassGap = m_iBigGap;
 			else
-				iClassGap = iSmallTime;
+				iClassGap = m_iSmallGap;
 
 			temp += iClassGap;
-			m_pThreadParam->PushtimeList(temp, !i, iClassTime);
+			m_pThreadParam->PushtimeList(temp, !i, m_iClassMin);
 		}
 	}
 
@@ -772,4 +763,14 @@ UINT CBellRingDlg::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 {
 	if (nPowerEvent == PBT_APMRESUMEAUTOMATIC) ReSetRingFlag();
 	return CDialogEx::OnPowerBroadcast(nPowerEvent, nEventData);
+}
+
+bool SThreadParam::PushtimeList(TimeOperate & time, bool bIsAM, int iClassTime)
+{
+	TimeOperate after = (time + iClassTime);
+	if (bIsAM == time.bIsAM() && bIsAM == after.bIsAM()) {
+		timeList.push_back(time); timeList.push_back(time += iClassTime); 
+		return true;
+	}
+	return false;
 }

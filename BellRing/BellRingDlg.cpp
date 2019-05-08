@@ -458,23 +458,23 @@ void CBellRingDlg::ReSetRingFlag()
 void CBellRingDlg::SetTimeListSize()
 {
 	CListBox* ringList = m_pThreadParam->pTimeListBox;
-	if ((ringList->GetStyle() & WS_VSCROLL) && !m_bIsTimeListBoxSized) {
-		CRect rect;
-		ringList->GetWindowRect(&rect);
-		ringList->SetWindowPos(NULL, 0, 0, rect.Width() + 20, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
-		GetWindowRect(&rect);
-		SetWindowPos(NULL, 0, 0, rect.Width() + 20, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
-		m_bIsTimeListBoxSized = true;
+	bool bVS = (ringList->GetStyle() & WS_VSCROLL);
+	if (bVS == m_bIsTimeListBoxSized)
+		return;
+	
+	int iSize;
+	if (m_bIsTimeListBoxSized) {
+		iSize = -20; m_bIsTimeListBoxSized = false;
+	}
+	else {
+		iSize = 20; m_bIsTimeListBoxSized = true;
 	}
 
-	if (!(ringList->GetStyle() & WS_VSCROLL) && m_bIsTimeListBoxSized) {
-		CRect rect;
-		ringList->GetWindowRect(&rect);
-		ringList->SetWindowPos(NULL, 0, 0, rect.Width() - 20, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
-		GetWindowRect(&rect);
-		SetWindowPos(NULL, 0, 0, rect.Width() - 20, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
-		m_bIsTimeListBoxSized = false;
-	}
+	CRect rect;
+	ringList->GetWindowRect(&rect);
+	ringList->SetWindowPos(NULL, 0, 0, rect.Width() + iSize, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
+	GetWindowRect(&rect);
+	SetWindowPos(NULL, 0, 0, rect.Width() + iSize, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
 }
 
 void CBellRingDlg::ShowTimeList()

@@ -157,6 +157,8 @@ unsigned __stdcall TimeShowThread(void* pParam)
 				pThreadParam->pTimeListBox->DeleteString(0);
 			pThreadParam->pTimeListBox->DeleteString(0);
 
+			((CBellRingDlg*)pThreadParam->pParentCBellRingDlg)->SetTimeListSize();
+
 			if (!pThreadParam->bIsMute) {
 				unsigned int	iThreadID;
 				UINT_PTR		hThreadHandle;
@@ -406,35 +408,36 @@ void CBellRingDlg::TextInputFormatTime(CEdit* editHelp, bool bIsAM, bool bIsKill
 void CBellRingDlg::SetTime()
 {
 	CString strTemp = _T("");
+	CString strStartTime[2];
 	GetDlgItemText(IDC_EDIT_AM, strTemp);
-	m_pThreadParam->strStartTime[0] = strTemp;
+	strStartTime[0] = strTemp;
 
 	GetDlgItemText(IDC_EDIT_PM, strTemp);
-	m_pThreadParam->strStartTime[1] = strTemp;
+	strStartTime[1] = strTemp;
 
 	GetDlgItemText(IDC_EDIT_CLASSTIME, strTemp);
-	m_pThreadParam->iClassTime = _wtoi(strTemp);
+	int iClassTime = _wtoi(strTemp);
 
 	GetDlgItemText(IDC_EDIT_GAPBIG, strTemp);
-	m_pThreadParam->iBigTime = _wtoi(strTemp);
+	int iBigTime = _wtoi(strTemp);
 
 	GetDlgItemText(IDC_EDIT_GAPSMALL, strTemp);
-	m_pThreadParam->iSmallTime = _wtoi(strTemp);
+	int iSmallTime = _wtoi(strTemp);
 
 	m_pThreadParam->timeList.clear();
 
 	for (int i = 0; i < 2; i++) {
-		TimeOperate temp(m_pThreadParam->strStartTime[i]);
-		temp -= m_pThreadParam->iBigTime;
+		TimeOperate temp(strStartTime[i]);
+		temp -= iBigTime;
 		for (int j = 0; j < 4; j++) {
 			int iClassGap = 0;
 			if (j % 2 == 0)
-				iClassGap = m_pThreadParam->iBigTime;
+				iClassGap = iBigTime;
 			else
-				iClassGap = m_pThreadParam->iSmallTime;
+				iClassGap = iSmallTime;
 
 			temp += iClassGap;
-			m_pThreadParam->PushtimeList(temp, !i);
+			m_pThreadParam->PushtimeList(temp, !i, iClassTime);
 		}
 	}
 
@@ -452,10 +455,32 @@ void CBellRingDlg::ReSetRingFlag()
 	ShowTimeList();
 }
 
+void CBellRingDlg::SetTimeListSize()
+{
+	CListBox* ringList = m_pThreadParam->pTimeListBox;
+	if ((ringList->GetStyle() & WS_VSCROLL) && !m_bIsTimeListBoxSized) {
+		CRect rect;
+		ringList->GetWindowRect(&rect);
+		ringList->SetWindowPos(NULL, 0, 0, rect.Width() + 20, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
+		GetWindowRect(&rect);
+		SetWindowPos(NULL, 0, 0, rect.Width() + 20, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
+		m_bIsTimeListBoxSized = true;
+	}
+
+	if (!(ringList->GetStyle() & WS_VSCROLL) && m_bIsTimeListBoxSized) {
+		CRect rect;
+		ringList->GetWindowRect(&rect);
+		ringList->SetWindowPos(NULL, 0, 0, rect.Width() - 20, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
+		GetWindowRect(&rect);
+		SetWindowPos(NULL, 0, 0, rect.Width() - 20, rect.Height(), SWP_NOMOVE | SWP_NOZORDER);
+		m_bIsTimeListBoxSized = false;
+	}
+}
+
 void CBellRingDlg::ShowTimeList()
 {
 	size_t i = m_pThreadParam->ringTimeFlag;
-	CListBox* ringList = ((CListBox*)(GetDlgItem(IDC_LIST1)));
+	CListBox* ringList = m_pThreadParam->pTimeListBox;
 	ringList->ResetContent();
 	while (i < m_pThreadParam->timeList.size())
 	{
@@ -464,6 +489,8 @@ void CBellRingDlg::ShowTimeList()
 		if (i % 2 != 0) ringList->AddString(L"");
 		i++;
 	}
+
+	SetTimeListSize();
 }
 
 void CBellRingDlg::ReadRingFile()

@@ -29,13 +29,8 @@ struct SThreadParam
 	UINT_PTR		hThreadHandle;
 
 	CString strCurrentTime;
-	CString strStartTime[2];
 
 	SWaveInfo* pRingInfo;
-
-	int iClassTime;
-	int iBigTime;
-	int iSmallTime;
 
 	bool bIsMute;
 
@@ -47,7 +42,7 @@ struct SThreadParam
 
 	CWnd* pParentCBellRingDlg;
 
-	bool PushtimeList(TimeOperate &time, bool bIsAM) {
+	bool PushtimeList(TimeOperate &time, bool bIsAM, int iClassTime) {
 		TimeOperate after = (time + iClassTime);
 		if (bIsAM == time.bIsAM() && bIsAM == after.bIsAM())
 		{
@@ -86,10 +81,12 @@ private:
 
 public:
 	void ReSetRingFlag();
+	void SetTimeListSize();
 
 private:
 	SThreadParam* m_pThreadParam;
 	CString m_strPreString[2] = { _T("") };
+	bool m_bIsTimeListBoxSized = false;
 
 // Implementation
 protected:

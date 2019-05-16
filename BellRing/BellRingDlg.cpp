@@ -16,6 +16,7 @@
 
 #define clamp_val(val, lo, hi) min(max(val, lo), hi)
 
+const UINT    WM_TASKBARCREATED = ::RegisterWindowMessage(_T("TaskbarCreated"));
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialogEx
@@ -89,6 +90,7 @@ BEGIN_MESSAGE_MAP(CBellRingDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_HIDE, &CBellRingDlg::OnBnClickedButtonHide)
 	ON_BN_CLICKED(IDC_CHECK1, &CBellRingDlg::OnBnClickedCheck1)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_SLIDER1, &CBellRingDlg::OnNMCustomdrawSlider1)
+	ON_REGISTERED_MESSAGE(WM_TASKBARCREATED, &CBellRingDlg::OnTaskBarCreated)
 	ON_WM_DESTROY()
 	ON_WM_POWERBROADCAST()
 END_MESSAGE_MAP()
@@ -763,6 +765,14 @@ UINT CBellRingDlg::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 {
 	if (nPowerEvent == PBT_APMRESUMEAUTOMATIC) ReSetRingFlag();
 	return CDialogEx::OnPowerBroadcast(nPowerEvent, nEventData);
+}
+
+LRESULT CBellRingDlg::OnTaskBarCreated(WPARAM wParam, LPARAM lParam)
+{
+	if (!this->IsWindowVisible()) {
+		CreateIconOnTray();
+	}
+	return 1;
 }
 
 bool SThreadParam::PushtimeList(TimeOperate & time, bool bIsAM, int iClassTime)

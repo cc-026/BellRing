@@ -108,6 +108,7 @@ public:
 	afx_msg void OnNMCustomdrawSlider1(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnDestroy();
 	afx_msg UINT OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData);
+	afx_msg LRESULT OnTaskBarCreated(WPARAM wParam, LPARAM lParam);
 public:
 	int m_iClassMin;
 	int m_iBigGap;

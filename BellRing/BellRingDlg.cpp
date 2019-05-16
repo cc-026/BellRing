@@ -676,7 +676,8 @@ void CBellRingDlg::CreateIconOnTray()
 	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
 	nid.uCallbackMessage = WM_SHOWTASK;//自定义的消息名称
 	nid.hIcon = LoadIcon(GetModuleHandle(NULL)/*AfxGetInstanceHandle()*/, MAKEINTRESOURCE(IDR_MAINFRAME));
-	//strcpy(nid.szTip, "程序名称"); //信息提示条
+	//wcscpy(nid.szTip, L"BellRing"); //信息提示条
+	swprintf_s(nid.szTip, L"BellRing"); //信息提示条
 	Shell_NotifyIcon(NIM_ADD, &nid); //在托盘区添加图标
 }
 

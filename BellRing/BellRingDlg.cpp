@@ -15,8 +15,9 @@
 #endif
 
 #define clamp_val(val, lo, hi) min(max(val, lo), hi)
-
+BOOL _bMouseTrack = TRUE;
 const UINT    WM_TASKBARCREATED = ::RegisterWindowMessage(_T("TaskbarCreated"));
+
 // CAboutDlg dialog used for App About
 
 class CAboutDlg : public CDialogEx
@@ -682,8 +683,6 @@ void CBellRingDlg::CreateIconOnTray()
 	m_traypos.SetNotifyIconInfo(m_hWnd, 1, WM_SHOWTASK);
 }
 
-BOOL _bMouseTrack = TRUE;
-
 #ifdef _WIN64
 LRESULT CBellRingDlg::OnTray(WPARAM wParam, LPARAM lParam)
 #else
@@ -700,13 +699,13 @@ LRESULT CBellRingDlg::OnTray(UINT nID, LPARAM lParam)
 	}
 	break;
 	case WM_LBUTTONDBLCLK: {
-		this->ShowWindow(SW_RESTORE);//简单的显示主窗口完事儿
+		this->ShowWindow(SW_RESTORE);
 		SetForegroundWindow();
-		Shell_NotifyIcon(NIM_DELETE, &nid);//图标删除
+		Shell_NotifyIcon(NIM_DELETE, &nid);
 	}
 	break;
 	case WM_MOUSEHOVER: {
-		swprintf_s(nid.szTip, L"Next ring time:%s\nCurrent time:%s", m_pThreadParam->timeList[m_pThreadParam->ringTimeFlag], m_pThreadParam->strCurrentTime);
+		swprintf_s(nid.szTip, L"%s", m_pThreadParam->GetRingInfo());
 		Shell_NotifyIcon(NIM_MODIFY, &nid);
 		OutputDebugString(L"WM_MOUSEHOVER\n"); 
 	}
@@ -801,4 +800,16 @@ bool SThreadParam::PushtimeList(TimeOperate & time, bool bIsAM, int iClassTime)
 		return true;
 	}
 	return false;
+}
+
+CString SThreadParam::GetRingInfo()
+{
+	CString strInfo;
+	if(timeList.size() > ringTimeFlag)
+		strInfo.Format(L"Next ring time:%s\nCurrent time:%s",timeList[ringTimeFlag], strCurrentTime);
+	else
+		strInfo.Format(L"No next ring time today\nCurrent time:%s", strCurrentTime);
+
+	OutputDebugString(strInfo);
+	return strInfo;
 }

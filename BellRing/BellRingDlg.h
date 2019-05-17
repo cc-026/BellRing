@@ -40,6 +40,7 @@ struct SThreadParam
 	CListBox* pTimeListBox;
 
 	bool PushtimeList(TimeOperate &time, bool bIsAM, int iClassTime); 
+	CString GetRingInfo();
 };
 
 class CBellRingDlg : public CDialogEx

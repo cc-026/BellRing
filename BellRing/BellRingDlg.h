@@ -12,6 +12,7 @@
 #include <mmsystem.h>
 #include "afxdialogex.h"
 #include "TimeOperate.h"
+#include "traypos.h"
 #pragma comment(lib, "winmm.lib")
 #pragma once
 
@@ -76,6 +77,7 @@ private:
 	SThreadParam* m_pThreadParam;
 	CString m_strPreTimeString[2] = { _T("") };
 	bool m_bIsTimeListBoxSized = false;
+	CMsgTrayPos	m_traypos;
 
 // Implementation
 protected:

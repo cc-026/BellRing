@@ -679,8 +679,10 @@ void CBellRingDlg::CreateIconOnTray()
 	//wcscpy(nid.szTip, L"BellRing"); //信息提示条
 	swprintf_s(nid.szTip, L"BellRing"); //信息提示条
 	Shell_NotifyIcon(NIM_ADD, &nid); //在托盘区添加图标
+	m_traypos.SetNotifyIconInfo(m_hWnd, 1, WM_SHOWTASK);
 }
 
+BOOL _bMouseTrack = TRUE;
 
 #ifdef _WIN64
 LRESULT CBellRingDlg::OnTray(WPARAM wParam, LPARAM lParam)
@@ -693,14 +695,29 @@ LRESULT CBellRingDlg::OnTray(UINT nID, LPARAM lParam)
 
 	switch (lParam)
 	{
-	case WM_RBUTTONUP:
-	{}
+	case WM_RBUTTONUP: {
+		OutputDebugString(L"WM_RBUTTONUP\n");
+	}
 	break;
-	case WM_LBUTTONDBLCLK:
-	{
+	case WM_LBUTTONDBLCLK: {
 		this->ShowWindow(SW_RESTORE);//简单的显示主窗口完事儿
 		SetForegroundWindow();
 		Shell_NotifyIcon(NIM_DELETE, &nid);//图标删除
+	}
+	break;
+	case WM_MOUSEHOVER: {
+		swprintf_s(nid.szTip, L"Next ring time:%s\nCurrent time:%s", m_pThreadParam->timeList[m_pThreadParam->ringTimeFlag], m_pThreadParam->strCurrentTime);
+		Shell_NotifyIcon(NIM_MODIFY, &nid);
+		OutputDebugString(L"WM_MOUSEHOVER\n"); 
+	}
+	break;
+	case WM_MOUSELEAVE: {
+		OutputDebugString(L"WM_MOUSELEAVE\n");
+	}
+	break;
+	case WM_MOUSEMOVE: {
+		//OutputDebugString(L"WM_MOUSEMOVE\n");
+		m_traypos.OnMouseMove();
 	}
 	break;
 	}
